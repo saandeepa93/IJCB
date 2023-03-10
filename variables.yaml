@@ -1,0 +1,33 @@
+
+paths:
+  root_mount: /mnt/ca_data
+  cur_backup: NSF Study Backup 11-16-22
+  data: Data Collection/data
+  #----------------------------------
+  compressed: /data/dataset/ca_data/compressed_video
+  merged_compressed: /data/dataset/ca_data/merged_compressed_video
+  #----------------------------------
+  touch: /data/dataset/ca_data/touch_data
+  affect_annot: /data/dataset/ca_data/affect_annot
+
+json:
+  affect_ts: ./data/affect_ts.json
+  affect_label: ./data/affect_label.json
+  touch_ts: ./data/touch_ts.json
+
+fixed_pwd:
+  adult:
+    1: GmxPV3L
+    2: Nv5PHS!8kP8
+    3: jxK&5sDpwfE+U
+  
+  children:
+    1: schoolRocks
+    2: g@me&play
+    3: GmxPV3L
+
+children: ['P0030', 'P0031', 'P0039']
+error:
+  P0016: S3
+  P0029: [S1, S2, S3]
+

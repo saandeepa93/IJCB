@@ -12,15 +12,9 @@ from tqdm import tqdm
 from icecream import ic
 from sys import exit as e
 
+from utils import read_yaml, read_json
 import process as p
 
-
-def read_yaml():
-  with open("./variables.yaml", "r") as stream:
-    try:
-        return yaml.safe_load(stream)
-    except yaml.YAMLError as exc:
-        print(exc)
 
 
 if __name__ == "__main__":
@@ -35,6 +29,7 @@ if __name__ == "__main__":
   # CHILDREN
   children = ['P0030', 'P0031', 'P0039']  
   error = {'P0029': ['S1', 'S2', 'S3'], 'P0016': ['S3']}
+  update = vars['update']
 
   # TOUCH VARIABLES
   desktop_key = "keylogger_desktop"
@@ -158,6 +153,10 @@ if __name__ == "__main__":
       
       
       #*************************************************PHONE*************************************************************
+      mod_flg = 0
+      if sub in update:
+        if sess_name in update[sub]:
+          mod_flg = int(update[sub][sess_name])
       phone_key_file = os.path.join(phone_key_dir, "keylogger.txt")
       # TASK 1: SMARTPHONE FIXED
       if not os.path.isfile(phone_key_file):
@@ -168,7 +167,7 @@ if __name__ == "__main__":
         subject_task_timestamps[sub][sess]["phone"]["fixed"]["start"] = "NA"
         subject_task_timestamps[sub][sess]["phone"]["fixed"]["end"] = "NA"
       else:
-        ts_start4, ts_end4 = p.process_fixed_file_phone(phone_key_file, pwd, ts_start2)
+        ts_start4, ts_end4 = p.process_fixed_file_phone(phone_key_file, pwd, ts_start2, mod_flg)
         subject_task_timestamps[sub][sess]["phone"]["fixed"]["start"] = ts_start4
         subject_task_timestamps[sub][sess]["phone"]["fixed"]["end"] = ts_end4
 
@@ -182,7 +181,7 @@ if __name__ == "__main__":
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["start"] = "NA"
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["end"] = "NA"
       else:
-        ts_start5, ts_end5 = p.process_ff_file_phone(phone_ff_file, phone_key_file, ts_start2)
+        ts_start5, ts_end5 = p.process_ff_file_phone(phone_ff_file, phone_key_file, ts_start2, mod_flg)
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["start"] = ts_start5
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["end"] = ts_end5
       
@@ -246,7 +245,7 @@ if __name__ == "__main__":
 
 
 
-  with open('./data/touch_ts_with_affect.json', 'w') as fp:
+  with open('./data/touch_ts_with_affect4.json', 'w') as fp:
     json.dump(subject_task_timestamps, fp,  indent=4)
   # ic(subject_task_timestamps)
 

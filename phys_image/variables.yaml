@@ -9,11 +9,14 @@ paths:
   #----------------------------------
   touch: /data/dataset/ca_data/touch_data
   affect_annot: /data/dataset/ca_data/affect_annot
+  #----------------------------------
+  phys: /data/dataset/ca_data/physiology
+  phys_affect_split: /data/dataset/ca_data/physiology_affect_split
 
 json:
   affect_ts: ./data/affect_ts.json
   affect_label: ./data/affect_label.json
-  touch_ts: ./data/touch_ts.json
+  touch_ts: ./data/touch_ts_with_affect3.json
 
 fixed_pwd:
   adult:
@@ -28,6 +31,11 @@ fixed_pwd:
 
 children: ['P0030', 'P0031', 'P0039']
 error:
-  P0016: S3
-  P0029: [S1, S2, S3]
+  P0016: [S3] # Repeated S2 videos
+  P0029: [S1, S2, S3] # Something not right
+  P0014: [S1] # Phys data is bad
+  P0021: [S1, S2]
+update:
+  P0011: {S3: 3000} # keylogger mobile;add 30 minutes. Taken a diff time.
+  # P0021: {S1: 86400, S2: 86400} # NO DATA IN LOCAL YET
 

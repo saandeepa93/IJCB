@@ -1,6 +1,7 @@
 import difflib
 from icecream import ic
+import datetime
 
-words = ['hello', 'Hallo', 'hi', 'house', 'key', 'screen', 'hallo', 'question', 'format']
-matches = difflib.get_close_matches('Hello', words)
-ic(matches)
+start_time_ms = 1651251967.84
+ts = datetime.datetime.fromtimestamp(start_time_ms)
+ic(ts)

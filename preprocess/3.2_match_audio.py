@@ -67,7 +67,6 @@ if __name__ == "__main__":
 
   pbar = tqdm(sorted(os.listdir(vid_dir)))
   for sub in pbar:
-    sub = "P0016"
     sub_dir = os.path.join(vid_dir, sub)
     if not os.path.isdir(sub_dir):
       continue
@@ -77,7 +76,6 @@ if __name__ == "__main__":
     timestamp_dict[sub] = {}
 
     for session in os.listdir(sub_dir):
-      session = "S3_August_29_2022"
       session_dir = os.path.join(sub_dir, session)
       if not os.path.isdir(session_dir):
         continue

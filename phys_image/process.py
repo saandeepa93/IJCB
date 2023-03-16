@@ -257,8 +257,11 @@ def process_essay_file(desktop_essay_file, desktop_key_file):
 
 
 #*******************************************SMARTPHONE helpers*******************************************
-def process_fixed_file_phone(phone_key_file, pwd, session_start):
+def process_fixed_file_phone(phone_key_file, pwd, session_start, mod_flg=0):
   new_df = prepare_csv_phone(phone_key_file)
+  # APPLIES ONLY TO P0011 S3
+  if mod_flg:
+    new_df['ts'] = new_df['ts'] + pd.Timedelta(seconds=3000)
   session_start = datetime.strptime(session_start, '%Y-%m-%d %H:%M:%S,%f')
   new_df = new_df[new_df['ts'] >= session_start]
   
@@ -306,8 +309,11 @@ def process_fixed_file_phone(phone_key_file, pwd, session_start):
     ic(phone_key_file, session_start)
     return None, None
 
-def process_ff_file_phone(phone_ff_file, phone_key_file, session_start):
+def process_ff_file_phone(phone_ff_file, phone_key_file, session_start, mod_flg=0):
   new_df = prepare_csv_phone(phone_key_file)
+  # APPLIES ONLY TO P0011 S3
+  if mod_flg:
+    new_df['ts'] = new_df['ts'] + pd.Timedelta(seconds=mod_flg)
   session_start = datetime.strptime(session_start, '%Y-%m-%d %H:%M:%S,%f')
   new_df = new_df[new_df['ts'] >= session_start]
   
@@ -325,18 +331,20 @@ def process_ff_file_phone(phone_ff_file, phone_key_file, session_start):
   span1 = match_pattern(mtc_str1.lower(), text.lower(), True)
   span2 = match_pattern(mtc_str2.lower(), text.lower(), False)
 
+  
   # GET FREE FORM IN CASE OUTPUT FORMAT DOES NOT HAVE NAMES
   lines = text.split('\n')
   if len(lines) <=11:
-    pass1 = lines[0]
-    pass2 = lines[-1]
+    # pass1 = lines[0]
+    # pass2 = lines[-1]
+    pass1 = next(s for s in lines if s)
+    pass2 = next(s for s in reversed(lines) if s)
   else:
     pass1 = text[span1[0]+13:span1[1]-13].strip()
     pass2 = text[span2[0]+11:].strip()
 
   e1 = e2 = 1
-  c1 = 4
-  c2 = 4
+  c1 = c2 = 6
   match_found = 0
   while (e1 <= c1 or e2 <= c2) and match_found == 0:
     mtc_str1 = rf"(?:{re.escape(pass1)}){{e<={e1}}}"
@@ -346,14 +354,14 @@ def process_ff_file_phone(phone_ff_file, phone_key_file, session_start):
     span2 = match_pattern(mtc_str2.lower(), key_str.lower(), False)
     
     if span1 is None and span2 is None:
-      break
+      e1 += 1
+      e2 += 1
     elif span1 is None:
       e1 = e1 + 1
     elif span2 is None:
       e2 = e2 + 1
     else:
       match_found = 1
-
 
   if not match_found:
     ic(f"No match found for DESKTOP: FREE-FORM FILE")
@@ -379,7 +387,7 @@ def process_affect_files():
 # ic(process_ff_file("./task_free_form_pass.docx", "./key_logs.txt"))
 # ic(process_essay_file("./task_essay.docx", "./key_logs.txt"))
 # ic(process_fixed_file_phone("./keylogger.txt", ["schoolRocks", "GmxPV3L"], "2022-11-14 09:54:46,133"))
-# ic(process_fixed_file_phone("./keylogger.txt", ["GmxPV3L", "jxK&5sDpwfE+U"], "2022-04-29 14:37:12,281"))
-# ic(process_ff_file_phone("ca_home_act_2.txt", "./keylogger.txt", "2022-04-29 13:06:14,461"))
+# ic(process_fixed_file_phone("./keylogger.txt", ["GmxPV3L", "jxK&5sDpwfE+U"], "2022-05-26 09:55:02,313", 0))
+# ic(process_ff_file_phone("ca_home_act_2.txt", "./keylogger.txt", "2022-05-26 09:55:02,313", 0))
 
   

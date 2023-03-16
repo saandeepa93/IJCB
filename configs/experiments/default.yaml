@@ -1,0 +1,17 @@
+PATHS:
+  VID_DIR: /data/dataset/ca_data/affect_split_videos_2
+  OPENFACE_DIR: /data/dataset/ca_data/openface/
+  TED_DIR: /data/dataset/ca_data/openface/ted
+
+JSON:
+  TOUCH_TS: ./data/touch_ts_with_affect3.json
+
+TED:
+  WINDOW: 10
+  
+DATASET:
+  N_CLASS: 2
+  IMG_SIZE: 224
+  NUM_WORKERS: 4
+  TEST: P0002
+  CAMERA_VIEW: "face"

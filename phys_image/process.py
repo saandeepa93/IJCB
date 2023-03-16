@@ -379,7 +379,7 @@ def process_ff_file_phone(phone_ff_file, phone_key_file, session_start, mod_flg=
     return None, None
 
 
-#*******************************************AFFECT helpers*******************************************
+#*******************************************PHYSIOLOGY helpers*******************************************
 def process_affect_files():
   pass
 

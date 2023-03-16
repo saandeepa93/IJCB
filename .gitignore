@@ -104,6 +104,8 @@ venv.bak/
 .mypy_cache/
 
 # archives
+.DS_Store
 shed
 data
 sample_data
+playground.py

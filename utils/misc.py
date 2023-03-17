@@ -7,7 +7,38 @@ import random
 import numpy as np
 import torch 
 
+class Iterator:
+  def __init__(self, root, ext, camera_view):
+    self.root_dir = root
+    self.ext = ext
+    self.camera = camera_view
+    
+  def __getallfiles__(self):
+    all_files = []
+    # SUBJECTS
+    for entry in os.scandir(self.root_dir):
+      if not entry.is_dir():
+        continue
+      sub_dir = entry.path
+      sub_name = entry.name
 
+      # SESSION
+      for entry2 in os.scandir(sub_dir):
+        if not entry2.is_dir():
+          continue
+        sess_dir = entry2.path
+        sess_name = entry2.name
+
+        # FILES
+        for entry3 in os.scandir(sess_dir):
+          if os.path.splitext(entry3.name)[-1] != self.ext:
+            continue
+          if self.camera not in entry3.name:
+            continue
+          fpath = entry3.path
+          fname = entry3.name
+          all_files.append(fpath)
+    return all_files
 
 
 def read_yaml():

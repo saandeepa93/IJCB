@@ -12,10 +12,6 @@ import datetime
 
 from utils import read_yaml, read_json, mkdir
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 6b33b4e7f9d07ba36d2c34cf27e3e8d509053603
 add_seconds = lambda x, s: x + datetime.timedelta(0, s)
 
 def process_acc(path, cols):
@@ -38,27 +34,6 @@ def process_acc(path, cols):
 if __name__ == "__main__":
   vars = read_yaml()
 
-<<<<<<< HEAD
-  touch_ts_path = vars['json']['touch_ts']
-  touch_ts_all = read_json(touch_ts_path)
-
-  valid_subjects = [key for key in touch_ts_all.keys() if touch_ts_all[key]]
-  error_data = vars['error']
-  
-  phys_root = vars['paths']['phys']
-  acc_file = "ACC.csv"
-  acc_cols = ['x', 'y', 'z']
-  
-  cols = ['value']
-  bvp_file = "BVP.csv"
-  eda_file = "EDA.csv"
-  hr_file = "HR.csv"
-  # ibi_file = "IBI.csv"
-  temp_file = "TEMP.csv"
-
-
-  dest_root = vars['paths']['phys_affect_split']
-=======
   # GET TOUCH DATA
   touch_ts_path = vars['json']['touch_ts']
   touch_ts_all = read_json(touch_ts_path)
@@ -80,7 +55,6 @@ if __name__ == "__main__":
   hr_file = "HR.csv"
   temp_file = "TEMP.csv"
   # ibi_file = "IBI.csv"
->>>>>>> 6b33b4e7f9d07ba36d2c34cf27e3e8d509053603
 
   pbar = tqdm(valid_subjects)
   for sub in pbar:

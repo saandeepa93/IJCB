@@ -3,6 +3,8 @@ import json
 import os 
 import argparse
 
+import av
+import cv2
 import random 
 import numpy as np
 import torch 
@@ -41,6 +43,17 @@ class Iterator:
     return all_files
 
 
+def save_frames(vid):
+  save_path = "/home/saandeepaath/Desktop/projects/ca_proj/temp"
+  vid = vid.permute(0, 2, 3, 1).numpy()
+  ctr = 0
+  for frame in vid:
+    img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    img = cv2.normalize(img, None, alpha=0,beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+    img = (img * 255).astype(np.uint8)
+    cv2.imwrite(os.path.join(save_path, f"{ctr}.png"), img)
+    ctr +=1 
+
 def read_yaml():
   with open("./phys_image/variables.yaml", "r") as stream:
     try:
@@ -67,6 +80,8 @@ def seed_everything(seed):
   torch.cuda.manual_seed(seed)
   torch.cuda.manual_seed_all(seed)
   torch.backends.cudnn.deterministic = True
+
+
 
 def get_args():
   parser = argparse.ArgumentParser(description="Vision Transformers")

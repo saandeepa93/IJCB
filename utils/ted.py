@@ -115,12 +115,12 @@ def plot_ted_w2d(df, save_path):
     fig.savefig(save_path)
 
 def plot_ted(df, save_path):
-    df.rename(columns = {0: 'y'}, 
-            inplace = True)
-    x_lst = [i for i in range(df.shape[0])]
-    df_x = pd.DataFrame(x_lst, columns=["x"])
-    df = df.join(df_x)
-    fig = px.line(df, x='x', y='y', title=f"TED")
+    # df.rename(columns = {0: 'y'}, 
+    #         inplace = True)
+    # x_lst = [i for i in range(df.shape[0])]
+    # df_x = pd.DataFrame(x_lst, columns=["x"])
+    # df = df.join(df_x)
+    fig = px.line(df, x='frame', y='ted', title=f"TED")
     
     fig.update_traces(marker=dict(size=6))
     fig.update_layout(legend=dict(

@@ -6,13 +6,14 @@ from icecream import ic
 from sys import exit as e
 
 import torch 
+from torchvision import io
 from torch.utils.data import DataLoader
 
 sys.path.append('.')
 from loader import VideoLoader, OpenFaceLoader
 from phys_image import get_args
 from configs.config import get_cfg_defaults
-from utils import calculate_ted_score, mkdir, plot_ted
+from utils import save_frames
 
 if __name__ == "__main__":  
   args = get_args()
@@ -25,4 +26,11 @@ if __name__ == "__main__":
   print(cfg)
 
   dataset = VideoLoader(cfg)
+  loader = DataLoader(dataset, batch_size=1, shuffle=False)
+
+  for b, (x, ) in enumerate(loader, 0):
+    # X_vid = x.permute(0, 3, 1, 2)
+    # io.write_video(f"./data/test.mp4", x , fps=2)
+    save_frames(x)
+    e("done saveing")
   e()

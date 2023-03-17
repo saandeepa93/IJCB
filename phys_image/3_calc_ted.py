@@ -37,6 +37,10 @@ if __name__ == "__main__":
     ted_score = calculate_ted_score(au_inten_OFPAU.values, gaze_loc.values, \
                                     gaze_rot.values, pose_loc.values, pose_rot.values,\
                                         landmarks.values, cfg.TED.WINDOW)
+                                      
+    ted_score.columns = ['ted']
+    ted_score['frame'] = range(0, ted_score.shape[0])
+    
     subject = fpath.split("/")[-3]
     session = fpath.split("/")[-2]
     fname = fpath.split('/')[-1]

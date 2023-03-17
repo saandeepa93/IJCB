@@ -24,6 +24,7 @@ _C.DATASET.IMG_SIZE = 224
 _C.DATASET.NUM_WORKERS = 4
 _C.DATASET.TEST = "P0002"
 _C.DATASET.CAMERA_VIEW = "face"
+_C.DATASET.NUM_FRAMES = 50
 
 def get_cfg_defaults():
   """Get a yacs CfgNode object with default values for my_project."""

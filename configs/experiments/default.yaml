@@ -2,6 +2,7 @@ PATHS:
   VID_DIR: /data/dataset/ca_data/affect_split_videos_2
   OPENFACE_DIR: /data/dataset/ca_data/openface/
   TED_DIR: /data/dataset/ca_data/openface/ted
+  VIS_PATH: ./data/vis
 
 JSON:
   TOUCH_TS: ./data/touch_ts_with_affect3.json
@@ -13,6 +14,14 @@ DATASET:
   N_CLASS: 2
   IMG_SIZE: 128
   NUM_WORKERS: 4
-  TEST: P0002
   CAMERA_VIEW: "face"
-  NUM_FRAMES: 50
+  NUM_FRAMES: 20
+
+SPLIT:
+  VAL_SPLIT: sess
+  SPLIT_VALUE: S3
+  SUBJECT: P0009
+
+
+TRAINING:
+  BATCH: 16

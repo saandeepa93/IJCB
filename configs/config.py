@@ -8,6 +8,7 @@ _C.PATHS = CN()
 _C.PATHS.VID_DIR = ""
 _C.PATHS.OPENFACE_DIR = ""
 _C.PATHS.TED_DIR = ""
+_C.PATHS.VIS_PATH = ""
 
 # TED
 _C.TED = CN()
@@ -22,9 +23,18 @@ _C.DATASET = CN()
 _C.DATASET.N_CLASS = 2
 _C.DATASET.IMG_SIZE = 224
 _C.DATASET.NUM_WORKERS = 4
-_C.DATASET.TEST = "P0002"
 _C.DATASET.CAMERA_VIEW = "face"
 _C.DATASET.NUM_FRAMES = 50
+
+# SPLIT
+_C.SPLIT = CN()
+_C.SPLIT.SUBJECT = "P0009"
+_C.SPLIT.VAL_SPLIT = "sess"
+_C.SPLIT.SPLIT_VALUE = "S3"
+
+# TRAINING
+_C.TRAINING = CN()
+_C.TRAINING.BATCH = 32
 
 def get_cfg_defaults():
   """Get a yacs CfgNode object with default values for my_project."""

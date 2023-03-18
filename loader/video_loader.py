@@ -19,6 +19,26 @@ from icecream import ic
 
 from utils import Iterator
 
+mp_face_detection = mp.solutions.face_detection
+face_detection = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.3)
+mp_drawing = mp.solutions.drawing_utils
+def crop_faces(img):
+  face_detection_results = face_detection.process(img)
+  h, w, c = img.shape
+  if face_detection_results.detections:
+    # Iterate over the found faces.
+    for face_no, face in enumerate(face_detection_results.detections):
+      face_data = face.location_data.relative_bounding_box
+      xleft = face_data.xmin*w
+      xleft = int(xleft)
+      xtop = face_data.ymin*h
+      xtop = int(xtop)
+      xright = face_data.width*w + xleft
+      xright = int(xright)
+      xbottom = face_data.height*h + xtop
+      xbottom = int(xbottom)
+      return [(xleft, xtop, xright, xbottom)]
+
 
 
 class VideoLoader(Dataset):
@@ -69,12 +89,19 @@ class VideoLoader(Dataset):
     top_40 = sorted_df.iloc[:15]['frame'].tolist()
     bottom_10 = sorted_df.iloc[-5:]['frame'].tolist()
     frames = sorted(top_40 + bottom_10)
+
+    # vr = VideoReader(vid_path, ctx=cpu(0))
+    # vid = vr.get_batch(frames).asnumpy()
+
     # AUGMENT
     augment_dict = {}
     for f, frame in enumerate(frames, 0):
+      # detected_faces = crop_faces(frame)
+      # cropped_img = Image.fromarray(frame).crop(detected_faces[0])
       img_path = os.path.join(aligned_path, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
-      im = np.array(Image.open(img_path))
-      crop_im = im.copy()
+      cropped_img = np.array(Image.open(img_path))
+
+      crop_im = np.array(cropped_img).copy()
       if f == 0:
         augment_dict["image"] = crop_im
       else:

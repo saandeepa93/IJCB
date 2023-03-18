@@ -122,6 +122,5 @@ def plot_loader_imgs(arr, exp, cfg, ctr):
 
     label = exp[i].item()
     img = cv2.putText(img, str(label), (int(h-100), int(w-20)), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1, 2)
-    ic(os.path.join(cfg.PATHS.VIS_PATH, f"img_{ctr}.png"))
     cv2.imwrite(os.path.join(cfg.PATHS.VIS_PATH, f"img_{ctr}.png"), img)
     ctr+=1

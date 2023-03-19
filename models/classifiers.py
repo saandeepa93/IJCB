@@ -3,6 +3,7 @@ from sys import exit as e
 
 import torch 
 from torch import nn
+from torch.nn import functional as F
 
 from einops.layers.torch import Rearrange
 
@@ -25,5 +26,5 @@ class Classifier(nn.Module):
     x = self.movinet(x)
     x = self.one_by_one(x)
     x = self.vit(x)
-    x = self.bn(x)
+    x = F.normalize(x, dim=1)
     return x

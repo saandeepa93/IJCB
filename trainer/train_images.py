@@ -42,11 +42,23 @@ def train(cfg, loader, model, optimizer, criterion):
   for b, (x, label, subject) in enumerate(tqdm(val_loader), 0):
     x = x.to(device)
     label = label.to(device)
+    label = label.unsqueeze(-1)
 
     x = rearrange(x, 'b t c h w -> b c t h w')
     out = model(x)
-    ic(out.size())
-    e()
+    loss_all = criterion(out, label)
+    loss = loss_all.mean()
+
+    model.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    with torch.no_grad():
+      avg_loss += loss_all.tolist()
+
+  avg_loss = sum(avg_loss)/len(avg_loss)
+  ic(avg_loss)
+    
 
 def validate(cfg, loader, model, criterion):
   pass
@@ -73,6 +85,7 @@ if __name__ == "__main__":
   train_loader, val_loader = prepare_dataset(cfg)
   model, criterion = prepare_model(cfg)
   model = model.to(device)
+  print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
 
   optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
 

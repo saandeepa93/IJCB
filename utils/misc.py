@@ -5,6 +5,8 @@ import argparse
 from icecream import ic
 from sys import exit as e
 
+from sklearn.metrics import accuracy_score, f1_score, matthews_corrcoef, confusion_matrix
+
 import av
 import cv2
 import random 
@@ -109,6 +111,12 @@ def get_args():
   parser.add_argument('--config', type=str, default='default', help='configuration to load')
   args = parser.parse_args()
   return args
+
+def get_metrics(y_true, y_pred):
+  acc = accuracy_score(y_true, y_pred)
+  mcc = matthews_corrcoef(y_true, y_pred)
+  conf = confusion_matrix(y_true, y_pred)
+  return round(acc, 3), round(mcc, 2), conf
 
 def plot_loader_imgs(arr, exp, cfg, ctr):
   arr = arr.permute(0, 1, 3, 4, 2)

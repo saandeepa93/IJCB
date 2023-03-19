@@ -7,6 +7,7 @@ from icecream import ic
 from sys import exit as e
 
 import torch 
+from torch import nn, optim
 from torchvision import io
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -14,17 +15,18 @@ from torch.utils.tensorboard import SummaryWriter
 from einops import rearrange
 
 sys.path.append('.')
-from loader import VideoLoader, OpenFaceLoader
 from configs.config import get_cfg_defaults
-from utils import save_frames, seed_everything, get_args, plot_loader_imgs
+from utils import save_frames, seed_everything, get_args, plot_loader_imgs, get_metrics
 
+from loader import VideoLoader, OpenFaceLoader
 from models import Classifier
+from losses import SupConLoss
 
 
 def prepare_model(cfg):
   model = Classifier(cfg)
-  return model
-
+  criterion = SupConLoss()
+  return model, criterion
 
 def prepare_dataset(cfg):
   train_dataset = VideoLoader(cfg, "train")
@@ -32,6 +34,22 @@ def prepare_dataset(cfg):
   val_dataset = VideoLoader(cfg, "val")
   val_loader = DataLoader(val_dataset, batch_size=cfg.TRAINING.BATCH, shuffle=True)
   return train_loader, val_loader
+
+def train(cfg, loader, model, optimizer, criterion):
+  avg_loss = []
+  avg_acc = []
+  model.train()
+  for b, (x, label, subject) in enumerate(tqdm(val_loader), 0):
+    x = x.to(device)
+    label = label.to(device)
+
+    x = rearrange(x, 'b t c h w -> b c t h w')
+    out = model(x)
+    ic(out.size())
+    e()
+
+def validate(cfg, loader, model, criterion):
+  pass
 
 if __name__ == "__main__":  
   seed_everything(42)
@@ -53,15 +71,14 @@ if __name__ == "__main__":
   print(cfg)
 
   train_loader, val_loader = prepare_dataset(cfg)
-  model = prepare_model(cfg)
+  model, criterion = prepare_model(cfg)
+  model = model.to(device)
 
-  start = time.time()
-  for b, (x, label, subject) in enumerate(tqdm(val_loader), 0):
-    x = rearrange(x, 'b t c h w -> b c t h w')
-    start = time.time()
-    x = model(x)
-    ic(f"Total: {time.time() - start}")
-    ic(x.size())
-    e()
+  optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
+
+  pbar = tqdm(range(cfg.TRAINING.ITER))
+  for epoch in pbar:
+    train(cfg, train_loader, model, optimizer, criterion)
+
     # plot_loader_imgs(x, label, cfg, b * cfg.TRAINING.BATCH)
     # save_frames(x)

@@ -6,7 +6,8 @@ from torch import nn
 
 from einops.layers.torch import Rearrange
 
-from models import MoViNet, _C
+from models.movinets import MoViNet, _C
+from models.transformer_model import ViT
 
 class Classifier(nn.Module):
   def __init__(self, cfg):
@@ -17,8 +18,12 @@ class Classifier(nn.Module):
       nn.Conv3d(480, 1, kernel_size=(1, 1, 1)), 
       Rearrange('b c t h w -> b (c t) (h w)')
     )
+    self.vit = ViT(cfg)
+    self.bn = nn.BatchNorm1d(cfg.TRANSFORMER.DIM_OUT, affine=False)
   
   def forward(self, x):
     x = self.movinet(x)
     x = self.one_by_one(x)
+    x = self.vit(x)
+    x = self.bn(x)
     return x

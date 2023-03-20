@@ -10,7 +10,7 @@ import os
 from sys import exit as e
 from icecream import ic
 
-from utils import Iterator
+from loader.base_loader import VideoIterator
 
 class OpenFaceLoader(Dataset):
 
@@ -19,7 +19,7 @@ class OpenFaceLoader(Dataset):
 
     self.cfg = cfg
     self.root_dir = os.path.join(self.cfg.PATHS.OPENFACE_DIR, "csv")
-    self.iterator = Iterator(self.root_dir, ".csv", cfg.DATASET.CAMERA_VIEW)
+    self.iterator = VideoIterator(self.root_dir, ".csv", cfg.DATASET.CAMERA_VIEW)
     self.all_files = self.iterator.__getallfiles__()
     au_int = [1, 2, 4, 5, 6, 7, 9, 10, 12, 14, 15, 17, 20, 23, 25, 26, 45]
     self.au_int_cols = [f"AU{str(AU).zfill(2)}_r" for AU in au_int]

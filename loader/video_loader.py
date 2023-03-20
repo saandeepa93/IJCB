@@ -17,7 +17,7 @@ import mediapipe as mp
 from sys import exit as e
 from icecream import ic
 
-from utils import Iterator
+from loader.base_loader import VideoIterator
 
 mp_face_detection = mp.solutions.face_detection
 face_detection = mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.3)
@@ -50,7 +50,7 @@ class VideoLoader(Dataset):
     self.ted_dir = cfg.PATHS.TED_DIR
     self.aligned_dir = os.path.join(cfg.PATHS.OPENFACE_DIR, "aligned")
     # self.iterator = Iterator(self.root_dir, ".mp4", cfg.DATASET.CAMERA_VIEW, train=cfg.DATASET.TRAIN)
-    self.iterator = Iterator(cfg, self.root_dir, ".mp4", mode)
+    self.iterator = VideoIterator(cfg, self.root_dir, ".mp4", mode)
     self.all_files, self.all_labels = self.iterator.__getallfiles__()
     self.transforms = self.get_augmentation()
     ic(len(self.all_files), len(self.all_labels))

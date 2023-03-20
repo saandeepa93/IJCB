@@ -8,9 +8,9 @@ from torch.nn import functional as F
 from einops.layers.torch import Rearrange
 
 from models.movinets import MoViNet, _C
-from models.transformer_model import ViT
+from models.transformer_model import ViT, ViT_face
 
-class Classifier(nn.Module):
+class ClassifierVideo(nn.Module):
   def __init__(self, cfg):
     super().__init__()
 
@@ -28,3 +28,14 @@ class Classifier(nn.Module):
     x = self.vit(x)
     x = F.normalize(x, dim=1)
     return x
+  
+
+class ClassifyImage(nn.Module):
+  def __init__(self, cfg) -> None:
+    super().__init__()
+
+    self.vit = ViT_face(cfg)
+  
+  def forward(self, x):
+    x = self.vit(x)
+    return F.softmax(x, dim=-1)

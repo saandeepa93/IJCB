@@ -105,3 +105,49 @@ class ViT(nn.Module):
         x = self.transformer(x)
         x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
         return x
+
+class ViT_face(nn.Module):
+    def __init__(self, cfg) -> None:
+        super().__init__()
+
+        image_height = image_width = cfg.DATASET.IMG_SIZE
+        patch_height = patch_width = cfg.TRANSFORMER.PATCH_SIZE
+
+        num_patches = (image_height // patch_height) * (image_width // patch_width)
+        patch_dim = 3 * patch_height * patch_width
+        dim = cfg.TRANSFORMER.DIM_OUT
+
+        self.to_patch_embedding = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_height, p2 = patch_width),
+            nn.LayerNorm(patch_dim),
+            nn.Linear(patch_dim, dim),
+            nn.LayerNorm(dim),
+        )
+
+        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
+        self.dropout = nn.Dropout(cfg.TRANSFORMER.DROPOUT)
+        
+        self.transformer = Transformer(dim, cfg.TRANSFORMER.DEPTH, cfg.TRANSFORMER.HEADS\
+            , cfg.TRANSFORMER.DIM_HEAD, cfg.TRANSFORMER.MLP_DIM, cfg.TRANSFORMER.DROPOUT)
+        
+        self.mlp_head = nn.Sequential(
+            nn.LayerNorm(dim),
+            nn.Linear(dim, cfg.DATASET.N_CLASS)
+        )
+
+    def forward(self, img):
+        x = self.to_patch_embedding(img)
+        b, n, _ = x.shape
+
+        cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = b)
+        x = torch.cat((cls_tokens, x), dim=1)
+        x += self.pos_embedding[:, :(n + 1)]
+        x = self.dropout(x)
+
+        x = self.transformer(x)
+
+        x = x.mean(dim = 1) #if self.pool == 'mean' else x[:, 0]
+        
+        x = self.mlp_head(x)
+        return x

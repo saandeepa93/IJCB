@@ -73,7 +73,7 @@ def train(loader, epoch, model, optimizer, criterion, cfg, device):
   
   return avg_loss, acc, f1, conf_mat
   
-def validate(loader, epoch, model, optimizer, criterion, cfg, device):
+def validate(loader, epoch, model, criterion, cfg, device):
   model.eval()
   avg_loss = []
   y_pred_all = []
@@ -129,10 +129,10 @@ if __name__ == "__main__":
   pbar = tqdm(range(cfg.TRAINING.ITER))
   for epoch in pbar:
     avg_train_loss, avg_train_acc, f1_train, conf_mat_train = train(train_loader, epoch, model, optimizer, criterion, cfg, device)
-    avg_val_loss, avg_val_acc, f1_val, conf_mat_val = validate(val_loader, epoch, model, optimizer, criterion, cfg, device)
+    avg_val_loss, avg_val_acc, f1_val, conf_mat_val = validate(val_loader, epoch, model, criterion, cfg, device)
 
     pbar.set_description(
-                          f"epoch: {epoch}; train_loss: {avg_train_loss}; val_loss: {avg_val_loss}; train_acc: {avg_train_acc}; val_acc: {avg_val_acc}"\
+                          f"epoch: {epoch}; train_loss: {round(avg_train_loss, 2)}; val_loss: {round(avg_val_loss, 2)}; train_acc: {round(avg_train_acc, 2)}; val_acc: {round(avg_val_acc, 2)}"\
                           # f"epoch: {epoch}; train_loss: {avg_train_loss}; val_loss: {avg_val_loss}; train_f1: {f1_train}; val_f1: {f1_val}"\
                         ) 
     

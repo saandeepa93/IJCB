@@ -17,6 +17,8 @@ class ImageIterator:
     self.train = cfg.SPLIT.SUBJECT
     self.val_split = cfg.SPLIT.VAL_SPLIT
     self.split_value = cfg.SPLIT.SPLIT_VALUE
+    self.affect_frames = int(cfg.DATASET.TED_SPLIT[0])
+    self.non_affect_frames = int(cfg.DATASET.TED_SPLIT[1])
     
   def __getallfiles__(self):
     all_sub_dict = {}
@@ -57,19 +59,22 @@ class ImageIterator:
           df = pd.read_csv(ted_path)
           sorted_df = df.sort_values(['ted'], ascending=False)
           sorted_df = sorted_df.iloc[::2]
-          top_40 = sorted_df.iloc[:200]['frame'].tolist()
-          bottom_10 = sorted_df.iloc[-50:]['frame'].tolist()
+          top_40 = sorted_df.iloc[:self.affect_frames]['frame'].tolist()
+          bottom_10 = sorted_df.iloc[-self.non_affect_frames:]['frame'].tolist()
 
           # TED FOR TRAIN; RANDOM FOR VAL
           if self.mode == "train":
             frames = sorted(top_40 + bottom_10)
+            # frames = sorted(list(random.sample(range(sorted_df.shape[0]), 60)))
           elif self.mode == "val":
-            frames = sorted(list(random.sample(range(sorted_df.shape[0]), 250)))
-          
+            # frames = sorted(top_40 + bottom_10)
+            frames = sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
+          # frames = sorted(list(random.sample(range(sorted_df.shape[0]), 60)))
           # FRAME LEVEL
           for frame in frames:
             frame_path = os.path.join(cam_dir, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
             all_sub_dict[frame_path] = ctr
+            ## UNCOMMENT FOR AUTHENTICATIOn
             # if self.train:
             #   if sub_name == self.train:
             #     all_sub_dict[frame_path] = 1

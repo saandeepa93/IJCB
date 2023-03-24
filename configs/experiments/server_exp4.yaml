@@ -16,6 +16,7 @@ DATASET:
   NUM_WORKERS: 6
   CAMERA_VIEW: "face"
   NUM_FRAMES: 20
+  TED_SPLIT: [100, 20]
 
 SPLIT:
   VAL_SPLIT: sess
@@ -40,3 +41,6 @@ TRANSFORMER:
   DROPOUT: 0.2
   POOL: cls
   PATCH_SIZE: 8
+
+COMMENTS: High affect on train and val
+

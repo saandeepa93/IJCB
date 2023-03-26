@@ -113,6 +113,8 @@ class ViT_face(nn.Module):
         image_height = image_width = cfg.DATASET.IMG_SIZE
         patch_height = patch_width = cfg.TRANSFORMER.PATCH_SIZE
 
+        output_dim = cfg.TRANSFORMER.DIM_OUT if cfg.DATASET.AUTH else cfg.DATASET.N_CLASS
+
         num_patches = (image_height // patch_height) * (image_width // patch_width)
         patch_dim = 3 * patch_height * patch_width
         dim = cfg.TRANSFORMER.DIM_OUT
@@ -133,7 +135,7 @@ class ViT_face(nn.Module):
         
         self.mlp_head = nn.Sequential(
             nn.LayerNorm(dim),
-            nn.Linear(dim, cfg.DATASET.N_CLASS)
+            nn.Linear(dim, output_dim)
         )
 
     def forward(self, img):

@@ -13,7 +13,24 @@ import random
 import numpy as np
 import torch 
 
+class TwoCropTransform:
+  """Create two crops of the same image"""
+  def __init__(self, transform):
+      self.transform = transform
 
+  def __call__(self, x):
+      return [self.transform(image=x)['image'], self.transform(image=x)['image']]
+
+
+def grad_flow(named_parameters):
+  ave_grads = 0
+  layers_cnt = 0
+  for n, p in named_parameters:
+    if p.requires_grad and ("bias" not in n) and p.grad is not None:
+      ave_grads += p.grad.abs().mean()
+      layers_cnt += 1
+  ave_grads /= layers_cnt
+  return ave_grads
 
 def save_frames(vid):
   save_path = "/home/saandeepaath/Desktop/projects/ca_proj/temp"

@@ -40,18 +40,14 @@ class SupConLoss(nn.Module):
 
       batch_size = features.shape[0]
 
+      labels = labels.contiguous().view(-1, 1)
       mask = torch.eq(labels, labels.T).float().to(device)
+      
       contrast_count = features.shape[1]
-      contrast_feature = features.clone()
       # contrast_feature = torch.cat(torch.unbind(features, dim=1), dim=0)
-      if self.contrast_mode == 'one':
-        anchor_feature = features[:, 0]
-        anchor_count = 1
-      elif self.contrast_mode == 'all':
-        anchor_feature = contrast_feature
-        anchor_count = contrast_count
-      else:
-        raise ValueError('Unknown mode: {}'.format(self.contrast_mode))
+
+      anchor_feature = contrast_feature
+      anchor_count = contrast_count
 
       # compute logits
       anchor_dot_contrast = torch.div(
@@ -62,9 +58,16 @@ class SupConLoss(nn.Module):
       logits_max, _ = torch.max(anchor_dot_contrast, dim=1, keepdim=True)
       logits = anchor_dot_contrast - logits_max.detach()
 
+      # tile mask
+      # mask = mask.repeat(anchor_count, contrast_count)
       # mask-out self-contrast cases
-      logits_mask = torch.ones((batch_size, batch_size), device=device) \
-        - torch.eye(batch_size, device=device)
+      # logits_mask = torch.scatter(
+      #     torch.ones_like(mask),
+      #     1,
+      #     torch.arange(batch_size * anchor_count).view(-1, 1).to(device),
+      #     0
+      # )
+      logits_mask = torch.ones((batch_size, batch_size), device=self.device) - torch.eye(batch_size, device=self.device)
       mask = mask * logits_mask
 
       # compute log_prob
@@ -76,5 +79,6 @@ class SupConLoss(nn.Module):
 
       # loss
       loss = - (self.temperature / self.base_temperature) * mean_log_prob_pos
+      loss = loss.view(anchor_count, batch_size).mean()
 
       return loss

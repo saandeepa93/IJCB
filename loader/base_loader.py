@@ -19,6 +19,8 @@ class ImageIterator:
     self.split_value = cfg.SPLIT.SPLIT_VALUE
     self.affect_frames = int(cfg.DATASET.TED_SPLIT[0])
     self.non_affect_frames = int(cfg.DATASET.TED_SPLIT[1])
+
+    
     
   def __getallfiles__(self):
     all_sub_dict = {}
@@ -55,6 +57,7 @@ class ImageIterator:
           cam_dir = entry3.path
           cam_name = entry3.name
           
+          # HANDLE TED FRAMES
           ted_path = os.path.join(self.cfg.PATHS.TED_DIR, sub_name, sess_name, f"{cam_name}.csv")
           df = pd.read_csv(ted_path)
           sorted_df = df.sort_values(['ted'], ascending=False)
@@ -64,22 +67,27 @@ class ImageIterator:
 
           # TED FOR TRAIN; RANDOM FOR VAL
           if self.mode == "train":
-            frames = sorted(top_40 + bottom_10)
-            # frames = sorted(list(random.sample(range(sorted_df.shape[0]), 60)))
+            frames = sorted(top_40 + bottom_10) if self.cfg.DATASET.TRAIN_HIGH \
+              else sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
           elif self.mode == "val":
-            # frames = sorted(top_40 + bottom_10)
-            frames = sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
-          # frames = sorted(list(random.sample(range(sorted_df.shape[0]), 60)))
+            frames =  sorted(top_40 + bottom_10) if self.cfg.DATASET.VAL_HIGH \
+              else sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
+            
           # FRAME LEVEL
           for frame in frames:
             frame_path = os.path.join(cam_dir, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
             all_sub_dict[frame_path] = ctr
-            ## UNCOMMENT FOR AUTHENTICATIOn
-            # if self.train:
-            #   if sub_name == self.train:
-            #     all_sub_dict[frame_path] = 1
-            #   else:
-            #     all_sub_dict[frame_path] = 0
+            
+            # LABELLING FOR AUTHENTICATION VS IDENTIFICATION
+            if self.cfg.DATASET.AUTH:
+              if self.train:
+                if sub_name == self.train:
+                  all_sub_dict[frame_path] = 1
+                else:
+                  all_sub_dict[frame_path] = 0
+            else:
+              all_sub_dict[frame_path] = ctr
+
       ctr+=1
     return all_sub_dict
 

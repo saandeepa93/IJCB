@@ -18,6 +18,7 @@ from sys import exit as e
 from icecream import ic
 
 from loader.base_loader import ImageIterator
+from utils import TwoCropTransform
 
 class ImageLoader(Dataset):
   def __init__(self, cfg, mode) -> None:
@@ -29,9 +30,11 @@ class ImageLoader(Dataset):
     self.iterator = ImageIterator(cfg, self.root_dir, ".bmp", mode)
     self.all_files_dict = self.iterator.__getallfiles__()
     self.all_files = list(self.all_files_dict.keys())
-    self.transforms = self.get_augmentation()
+    self.train_transforms_single, self.val_transforms = self.get_augmentation()
+    self.train_transforms = TwoCropTransform(self.train_transforms_single)
     ic(len(self.all_files_dict))
 
+  
   def get_augmentation(self):
     transforms = A.Compose([
       A.Resize(self.cfg.DATASET.IMG_SIZE, self.cfg.DATASET.IMG_SIZE, p=1),
@@ -39,7 +42,22 @@ class ImageLoader(Dataset):
       ToTensorV2()
       ])
     
-    return transforms
+    train_transform = A.Compose([
+        A.Resize(self.cfg.DATASET.IMG_SIZE, self.cfg.DATASET.IMG_SIZE, p=1),
+        A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], p=1),
+        A.HorizontalFlip(p = 0.5),
+        A.ColorJitter(0.4, 0.4, 0.4, 0.1),
+        A.ToGray(p=0.2),
+        ToTensorV2(),
+      ])
+
+    val_transform = transforms = A.Compose([
+      A.Resize(self.cfg.DATASET.IMG_SIZE, self.cfg.DATASET.IMG_SIZE, p=1),
+      A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], p=1),
+      ToTensorV2()
+      ])
+    
+    return train_transform, val_transform
     
   def __len__(self):
     return len(self.all_files)
@@ -49,9 +67,14 @@ class ImageLoader(Dataset):
     x_img = np.array(Image.open(aligned_path))
     
     if self.mode == "train":
-      x_img = self.transforms(image=x_img)['image']
+      x_img = self.train_transforms_single(image=x_img)['image']
+      # if not self.cfg.DATASET.AUTH:
+      #   x_img = self.train_transforms_single(image=x_img)['image']
+      # else:
+      #   x_img = self.train_transforms(x_img)
     elif self.mode == "val":
-      x_img = self.transforms(image=x_img)['image']
+      x_img = self.val_transforms(image=x_img)['image']
+
     
     label = self.all_files_dict[aligned_path]
     subject = aligned_path.split('/')[-4]

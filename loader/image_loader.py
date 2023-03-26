@@ -78,9 +78,13 @@ class ImageLoader(Dataset):
     
     label = self.all_files_dict[aligned_path]
     subject = aligned_path.split('/')[-4]
+    sess = aligned_path.split('/')[-3].split('_')[0]
+    view = aligned_path.split('/')[-2].split('_')[-1]
+    fname = aligned_path.split('/')[-1].split('.')[0]
+
 
     
-    return x_img, label, subject
+    return x_img, label, f"{subject}_{sess}_{view}_{fname}"
 
 
 

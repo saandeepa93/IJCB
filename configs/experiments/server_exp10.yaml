@@ -13,7 +13,7 @@ TED:
 DATASET:
   N_CLASS: 2
   N_CHAN: 3
-  IMG_SIZE: 64
+  IMG_SIZE: 224
   NUM_WORKERS: 6
   CAMERA_VIEW: "face"
   NUM_FRAMES: 20
@@ -58,5 +58,5 @@ TRANSFORMER:
   POOL: cls
   PATCH_SIZE: 8
 
-COMMENTS: Analysing gradients
+COMMENTS: Using ResNet, saving best model
 

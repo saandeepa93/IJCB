@@ -69,9 +69,9 @@ def train(loader, epoch, model, optimizer, criterion, cfg, device):
     label = label.type(torch.LongTensor)
     label = label.to(device)
     
-    
     bsz = label.size(0)
     features = model(x)
+
 
     # f1, f2 = torch.split(features, [bsz, bsz], dim=0)
     # features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
@@ -134,7 +134,7 @@ if __name__ == "__main__":
   print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
   train_loader, val_loader = prepare_dataset(cfg)
 
-  optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
+  optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
   scheduler = CosineAnnealingLR(optimizer, cfg.LR.T_MAX, cfg.LR.MIN_LR)
 
   # TRAINING
@@ -145,15 +145,20 @@ if __name__ == "__main__":
     # avg_val_loss = validate(val_loader, epoch, model, criterion, cfg, device)
     curr_lr = optimizer.param_groups[0]["lr"] 
     avg_grad = grad_flow(model.named_parameters()).item()
-
+    
     if cfg.LR.ADJUST:
       scheduler.step()
+    
+    if avg_train_loss < min_loss:
+      min_loss = avg_train_loss
+      torch.save(model.state_dict(), f"checkpoint/{args.config}_model_final.pt")
 
     pbar.set_description(
-                          f"epoch: {epoch}; train_loss: {round(avg_train_loss, 4)}; LR: {round(curr_lr, 4)}; avg_grad: {round(avg_grad, 4)}"
+                          f"epoch: {epoch}; train_loss: {round(avg_train_loss, 4)}; LR: {round(curr_lr, 4)}; avg_grad: {avg_grad}; min_loss: {round(min_loss, 4)}"
                         ) 
-    writer.add_scalar("Train/Loss", round(avg_train_loss, 6), epoch)
-    writer.add_scalar("avg_grad", round(avg_grad, 4), epoch)
+    writer.add_scalar("Train/Loss", round(avg_train_loss, 4), epoch)
+    writer.add_scalar("avg_grad", round(avg_grad, 5), epoch)
+    writer.add_scalar("Train/Min_Loss", round(min_loss, 5), epoch)
     # writer.add_scalar("Val/Loss", round(avg_val_loss, 2), epoch)
 
 

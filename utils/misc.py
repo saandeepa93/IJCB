@@ -12,6 +12,41 @@ import cv2
 import random 
 import numpy as np
 import torch 
+from umap import UMAP
+import pandas as pd
+import plotly.express as px
+
+def plot_umap(X_lst_un, y_lst, name, fname_all, dim):
+  b = X_lst_un.size(0)
+  X_lst = UMAP(n_components=dim, random_state=0, init='random').fit_transform(X_lst_un.view(b, -1))
+  y_lst_label = [str(i) for i in y_lst.detach().numpy()]
+
+  if dim == 3:
+    df = pd.DataFrame(X_lst, columns=["x", "y", "z"])
+  else:
+    df = pd.DataFrame(X_lst, columns=["x", "y"])
+  df_color = pd.DataFrame(y_lst_label, columns=["class"])
+  df_fname = pd.DataFrame(fname_all, columns=["fname"])
+  df = df.join(df_color)
+  df = df.join(df_fname)
+  
+  if dim == 3:
+    fig = px.scatter_3d(df, x='x', y='y', z='z',color='class', title=f"{name}", \
+      hover_data=[df.fname])
+  else:
+    fig = px.scatter(df, x='x', y='y',color='class', title=f"{name}", \
+      hover_data=[df.fname])
+  
+  fig.update_traces(marker=dict(size=6))
+  fig.update_layout(legend=dict(
+    yanchor="top",
+    y=0.60,
+    xanchor="left",
+    x=0.70
+    ))
+  # fig.update_traces(hovertemplate = 'fname=%{customdata[0]}<br>')
+  fig.write_html(f"./data/vis/umap/{dim}d_{name}.html")
+
 
 class TwoCropTransform:
   """Create two crops of the same image"""

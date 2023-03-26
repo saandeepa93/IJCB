@@ -21,18 +21,20 @@ from loader.base_loader import ImageIterator
 from utils import TwoCropTransform
 
 class ImageLoader(Dataset):
-  def __init__(self, cfg, mode) -> None:
+  def __init__(self, cfg, mode, aug=False) -> None:
     super().__init__()
     self.cfg = cfg
     self.mode = mode
+    self.aug = aug
     self.ted_dir = cfg.PATHS.TED_DIR
     self.root_dir = os.path.join(cfg.PATHS.OPENFACE_DIR, "aligned")
     self.iterator = ImageIterator(cfg, self.root_dir, ".bmp", mode)
-    self.all_files_dict = self.iterator.__getallfiles__()
+    self.all_files_dict, self.classwise_dict = self.iterator.__getallfiles__()
     self.all_files = list(self.all_files_dict.keys())
     self.train_transforms_single, self.val_transforms = self.get_augmentation()
     self.train_transforms = TwoCropTransform(self.train_transforms_single)
     ic(len(self.all_files_dict))
+    ic(self.classwise_dict)
 
   
   def get_augmentation(self):
@@ -66,12 +68,14 @@ class ImageLoader(Dataset):
     aligned_path = self.all_files[idx]
     x_img = np.array(Image.open(aligned_path))
     
-    if self.mode == "train":
+    if self.aug and self.mode == "train":
       x_img = self.train_transforms_single(image=x_img)['image']
-      # if not self.cfg.DATASET.AUTH:
-      #   x_img = self.train_transforms_single(image=x_img)['image']
-      # else:
-      #   x_img = self.train_transforms(x_img)
+    if not self.aug and self.mode == "train":
+      x_img = self.val_transforms(image=x_img)['image']
+        # if not self.cfg.DATASET.AUTH:
+        #   x_img = self.train_transforms_single(image=x_img)['image']
+        # else:
+        #   x_img = self.train_transforms(x_img)
     elif self.mode == "val":
       x_img = self.val_transforms(image=x_img)['image']
 

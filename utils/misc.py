@@ -16,7 +16,7 @@ from umap import UMAP
 import pandas as pd
 import plotly.express as px
 
-def plot_umap(X_lst_un, y_lst, name, fname_all, dim):
+def plot_umap(X_lst_un, y_lst, name, fname_all, dim, mode):
   b = X_lst_un.size(0)
   X_lst = UMAP(n_components=dim, random_state=0, init='random').fit_transform(X_lst_un.view(b, -1))
   y_lst_label = [str(i) for i in y_lst.detach().numpy()]
@@ -44,8 +44,11 @@ def plot_umap(X_lst_un, y_lst, name, fname_all, dim):
     xanchor="left",
     x=0.70
     ))
+  
+  dest_path = os.path.join("./data/vis/umap/", name)
+  mkdir(dest_path)
   # fig.update_traces(hovertemplate = 'fname=%{customdata[0]}<br>')
-  fig.write_html(f"./data/vis/umap/{dim}d_{name}.html")
+  fig.write_html(os.path.join(dest_path, f"{dim}d_{name}_{mode}.html"))
 
 
 class TwoCropTransform:

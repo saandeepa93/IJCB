@@ -18,7 +18,7 @@ from einops import rearrange
 
 sys.path.append('.')
 from configs.config import get_cfg_defaults
-from utils import seed_everything, get_args, plot_loader_imgs, grad_flow, plot_umap
+from utils import seed_everything, get_args, plot_loader_imgs, grad_flow, plot_umap, mkdir
 from loader import ImageLoader
 from models import AuthImage
 from losses import SupConLoss
@@ -42,8 +42,8 @@ def save_embedding(args, loader, mode, device):
     all_features = torch.cat(all_features, dim=0)
     all_label = torch.cat(all_label, dim=0)
     
-    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}_{mode}", all_fname, 2)
-    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}_{mode}", all_fname, 3)
+    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 2, mode)
+    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 3, mode)
 
 if __name__ == "__main__":
   # SET DEVICE
@@ -70,7 +70,7 @@ if __name__ == "__main__":
   model = model.to(device)
   model.eval()
 
-  train_loader, val_loader = prepare_dataset(cfg)
+  train_loader, val_loader = prepare_dataset(cfg, False)
   print("Saving Train dataset...")
   save_embedding(args, train_loader, "train", device)
   print("Saving Val dataset...")

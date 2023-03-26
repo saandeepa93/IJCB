@@ -51,9 +51,9 @@ class AuthImage(nn.Module):
     super().__init__()
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # self.encoder = InceptionResnetV1(pretrained='vggface2', in_chan=cfg.DATASET.N_CHAN, \
-    #   dropout_prob=0.1, device=device)
-    self.encoder = SupConResNet(name="resnet50")
+    self.encoder = InceptionResnetV1(pretrained='vggface2', in_chan=cfg.DATASET.N_CHAN, \
+      dropout_prob=0.1, device=device)
+    # self.encoder = SupConResNet(name="resnet18")
     self.head = nn.Sequential(
                 nn.Linear(cfg.MODEL.ENC_DIM, cfg.MODEL.ENC_DIM),
                 nn.ReLU(inplace=True),

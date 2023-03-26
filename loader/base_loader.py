@@ -24,6 +24,7 @@ class ImageIterator:
     
   def __getallfiles__(self):
     all_sub_dict = {}
+    classwise_dict = {0:0, 1:0}
     ctr = 0
     # SUBJECTS
     for entry in os.scandir(self.root_dir):
@@ -58,8 +59,16 @@ class ImageIterator:
           cam_name = entry3.name
           
           # HANDLE TED FRAMES
+          openface_path = os.path.join(self.cfg.PATHS.OPENFACE_DIR, sub_name, sess_name, f"{cam_name}.csv")
+          df_of = pd.read_csv(openface_path)
+          valid_ind = df_of[df_of['success'] == 1]['frame'].tolist()
+          valid_ind = [ind-1 for ind in valid_ind]
+
           ted_path = os.path.join(self.cfg.PATHS.TED_DIR, sub_name, sess_name, f"{cam_name}.csv")
           df = pd.read_csv(ted_path)
+          # SELECT VALID OPENFACE RECORD
+          df = df[df['frame'].isin(valid_ind)]
+
           sorted_df = df.sort_values(['ted'], ascending=False)
           sorted_df = sorted_df.iloc[::2]
           top_40 = sorted_df.iloc[:self.affect_frames]['frame'].tolist()
@@ -76,20 +85,22 @@ class ImageIterator:
           # FRAME LEVEL
           for frame in frames:
             frame_path = os.path.join(cam_dir, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
-            all_sub_dict[frame_path] = ctr
+            # all_sub_dict[frame_path] = ctr
             
             # LABELLING FOR AUTHENTICATION VS IDENTIFICATION
             if self.cfg.DATASET.AUTH:
               if self.train:
                 if sub_name == self.train:
                   all_sub_dict[frame_path] = 1
+                  classwise_dict[1] +=1
                 else:
                   all_sub_dict[frame_path] = 0
+                  classwise_dict[0] +=1
             else:
               all_sub_dict[frame_path] = ctr
 
       ctr+=1
-    return all_sub_dict
+    return all_sub_dict, classwise_dict
 
 class VideoIterator:
   # def __init__(self, root, ext, camera_view, train=False, mode="train"):

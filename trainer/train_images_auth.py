@@ -44,9 +44,9 @@ def prepare_model(cfg):
     criterion = nn.CrossEntropyLoss()
   return model, criterion
 
-def prepare_dataset(cfg):
-  train_dataset = ImageLoader(cfg, "train")
-  val_dataset = ImageLoader(cfg, "val")
+def prepare_dataset(cfg, aug):
+  train_dataset = ImageLoader(cfg, "train", aug)
+  val_dataset = ImageLoader(cfg, "val", False)
 
   if cfg.TRAINING.SAMPLER:
     all_labels = list(train_dataset.all_files_dict.values())
@@ -132,7 +132,7 @@ if __name__ == "__main__":
   model, criterion = prepare_model(cfg)
   model = model.to(device)
   print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
-  train_loader, val_loader = prepare_dataset(cfg)
+  train_loader, val_loader = prepare_dataset(cfg, True)
 
   optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
   scheduler = CosineAnnealingLR(optimizer, cfg.LR.T_MAX, cfg.LR.MIN_LR)

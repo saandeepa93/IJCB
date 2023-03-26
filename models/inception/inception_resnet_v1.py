@@ -297,7 +297,6 @@ class InceptionResnetV1(nn.Module):
         x = self.dropout(x)
         x = self.last_linear(x.view(x.shape[0], -1))
         x = self.last_bn(x)
-        return x.flatten(1)
         if self.classify:
             x = self.logits(x)
         else:

@@ -28,7 +28,7 @@ SPLIT:
   SUBJECT: P0002
 
 TRAINING:
-  BATCH: 64
+  BATCH: 256
   LR: 1e-4
   WT_DECAY: 1e-4
   FEAT: 128
@@ -58,5 +58,5 @@ TRANSFORMER:
   POOL: cls
   PATCH_SIZE: 8
 
-COMMENTS: Using ResNet, saving best model
+COMMENTS: Using FaceNet, saving best model. Added Normalizing in encoder network
 

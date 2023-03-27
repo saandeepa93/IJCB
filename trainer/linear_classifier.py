@@ -18,7 +18,7 @@ from einops import rearrange
 
 sys.path.append('.')
 from configs.config import get_cfg_defaults
-from utils import seed_everything, get_args, plot_loader_imgs, grad_flow
+from utils import seed_everything, get_args, plot_loader_imgs, grad_flow, get_metrics, mkdir
 from loader import ImageLoader
 from models import AuthImage, LinearClassifier
 from losses import SupConLoss
@@ -38,10 +38,7 @@ def warmup_learning_rate(cfg, epoch, batch_id, total_batches, optimizer):
 def prepare_model(cfg):
   model = AuthImage(cfg)
   model = nn.DataParallel(model)
-  if cfg.DATASET.AUTH:
-    criterion = SupConLoss()
-  else:
-    criterion = nn.CrossEntropyLoss()
+  criterion = nn.CrossEntropyLoss()
   return model, criterion
 
 def prepare_dataset(cfg, aug):
@@ -60,45 +57,68 @@ def prepare_dataset(cfg, aug):
   val_loader = DataLoader(val_dataset, batch_size=cfg.TRAINING.BATCH, shuffle=True)
   return train_loader, val_loader
 
-def train(loader, epoch, model, optimizer, criterion, cfg, device):
-  model.train()
+def train(loader, epoch, model, classifier, optimizer, criterion, cfg, device):
+  model.eval()
+  classifier.train()
   avg_loss = []
+  y_train_true = []
+  y_train_pred = []
+
   for b, (x, label, _) in enumerate(loader, 0):
     # x = torch.cat([x[0], x[1]], dim=0)
     x = x.to(device)
     label = label.type(torch.LongTensor)
     label = label.to(device)
+    
     bsz = label.size(0)
-    features = model(x)
-    # f1, f2 = torch.split(features, [bsz, bsz], dim=0)
-    # features = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
-    loss = criterion(features, label)
+
     with torch.no_grad():
+      features = model.module.encoder(x)
+
+    out = classifier(features.detach())
+    loss = criterion(out, label)
+
+    with torch.no_grad():
+      y_train_pred += list(torch.argmax(out, dim=-1).cpu())
+      y_train_true += list(label.cpu())
       avg_loss.append(loss.item())
+
     warmup_learning_rate(cfg, epoch, b, len(loader), optimizer)
+
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
   avg_loss = sum(avg_loss)/len(avg_loss)
-  return avg_loss
+  avg_acc, _, _, _ = get_metrics(y_train_true, y_train_pred)
+  return avg_loss, avg_acc
   
-def validate(loader, epoch, model, criterion, cfg, device):
-  model.eval()
+def validate(loader, epoch, model, classifier, criterion, cfg, device):
+  classifier.eval()
   avg_loss = []
+  y_val_true = []
+  y_val_pred = []
+
   with torch.no_grad():
     for b, (x, label, _) in enumerate(loader, 0):
-      unique = torch.unique(label, return_counts=True)
+      # unique = torch.unique(label, return_counts=True)
       # plot_loader_imgs(x, label, cfg, b)
       x = x.to(device)
       label = label.type(torch.LongTensor)
       label = label.to(device)
 
-      features = model(x)
-      loss = criterion(features, label)
+      features = model.module.encoder(x)
+      out = classifier(features.detach())
+      loss = criterion(out, label)
+
+      y_val_pred += list(torch.argmax(out, dim=-1).cpu())
+      y_val_true += list(label.cpu())
       avg_loss.append(loss.item())
 
+
   avg_loss = sum(avg_loss)/len(avg_loss)
-  return avg_loss
+  avg_acc, _, _, _ = get_metrics(y_val_true, y_val_pred)
+  return avg_loss, avg_acc
 
 
 if __name__ == "__main__":  
@@ -119,13 +139,26 @@ if __name__ == "__main__":
    # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
   cfg.merge_from_file(config_path)
+  # cfg.TRAINING.BATCH = 64
+  cfg.DATASET.NUM_WORKERS = 4
   cfg.freeze()
   print(cfg)
 
   # GET MODEL, DATASET ETC
   model, criterion = prepare_model(cfg)
   model = model.to(device)
-  print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+  ckp = f"server_{args.config.split('_')[0]}_model_final.pt"
+  checkpoint = torch.load(f"./checkpoint/{ckp}", map_location=device)
+  model.load_state_dict(checkpoint)
+  ckp_path = f"./checkpoint/server_{args.config.split('_')[0]}"
+  for param in model.parameters():
+    param.requires_grad = False
+  mkdir(ckp_path)
+
+  classifier = LinearClassifier(cfg)
+  classifier = classifier.to(device)
+
+  print("Total Trainable Parameters: ", sum(p.numel() for p in classifier.parameters() if p.requires_grad))
 
   train_loader, val_loader = prepare_dataset(cfg, True)
 
@@ -137,27 +170,27 @@ if __name__ == "__main__":
   min_loss = 1e5
   pbar = tqdm(range(cfg.TRAINING.ITER))
   for epoch in pbar:
-    avg_train_loss = train(train_loader, epoch, model, optimizer, criterion, cfg, device)
-    avg_val_loss = validate(val_loader, epoch, model, criterion, cfg, device)
+    avg_train_loss, avg_train_acc = train(train_loader, epoch, model, classifier, optimizer, criterion, cfg, device)
+    avg_val_loss, avg_val_acc = validate(val_loader, epoch, model, classifier, criterion, cfg, device)
     curr_lr = optimizer.param_groups[0]["lr"] 
-    avg_grad = grad_flow(model.named_parameters()).item()
+    # avg_grad = grad_flow(model.named_parameters()).item()
     
     if cfg.LR.ADJUST:
       scheduler.step()
     
-    if avg_val_loss < min_loss:
-      min_loss = avg_val_loss
-      torch.save(model.state_dict(), f"checkpoint/{args.config}_model_final.pt")
+    if avg_val_acc < min_loss:
+      min_loss = avg_val_acc
+      torch.save(classifier.state_dict(), f"{ckp_path}/linear_{ckp}")
 
     pbar.set_description(
-        f"train_loss: {round(avg_train_loss, 4)}; LR: {round(curr_lr, 4)}; avg_grad: {avg_grad}; min_loss: {round(min_loss, 4)};"
-        f"val_loss: {round(avg_val_loss, 4)}"
+        f"train_loss: {round(avg_train_loss, 4)}; train_acc: {round(avg_train_acc, 4)};"
+        f"train_loss: {round(avg_val_loss, 4)}; val_acc: {round(avg_val_acc, 4)}; LR: {round(curr_lr, 4)}"
                         ) 
     writer.add_scalar("Train/Loss", round(avg_train_loss, 4), epoch)
     writer.add_scalar("Val/Loss", round(avg_val_loss, 4), epoch)
-    writer.add_scalar("avg_grad", round(avg_grad, 5), epoch)
+    writer.add_scalar("Train/Acc", round(avg_train_acc, 4), epoch)
+    writer.add_scalar("Val/Acc", round(avg_val_acc, 4), epoch)
     # writer.add_scalar("Train/Min_Loss", round(min_loss, 5), epoch)
-    # writer.add_scalar("Val/Loss", round(avg_val_loss, 2), epoch)
 
 
 

@@ -25,7 +25,7 @@ from losses import SupConLoss
 from train_images_auth import prepare_model, prepare_dataset
 
 
-def save_embedding(args, loader, mode, device):
+def save_embedding(args, loader, model, mode, device):
   with torch.no_grad():
     all_features = []
     all_fname = []
@@ -33,7 +33,7 @@ def save_embedding(args, loader, mode, device):
     for b, (x, label, fname) in enumerate(loader, 0):
       x = x.to(device)
       label = label.to(device)
-      features = model(x)
+      features = model.module.encoder(x)
 
       all_features.append(features)
       all_fname += list(fname)
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
   train_loader, val_loader = prepare_dataset(cfg, False)
   print("Saving Train dataset...")
-  save_embedding(args, train_loader, "train", device)
+  save_embedding(args, train_loader, model, "train", device)
   print("Saving Val dataset...")
-  save_embedding(args, val_loader, "val", device)
+  save_embedding(args, val_loader, model, "val", device)
   

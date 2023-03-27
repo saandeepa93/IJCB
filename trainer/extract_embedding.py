@@ -60,6 +60,9 @@ if __name__ == "__main__":
    # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
   cfg.merge_from_file(config_path)
+  cfg.DATASET.W_SAMPLER = False
+  cfg.DATASET.NUM_WORKERS = 1
+  cfg.TRAINING.BATCH = 32
   cfg.freeze()
   print(cfg)
 

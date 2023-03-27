@@ -20,7 +20,7 @@ sys.path.append('.')
 from configs.config import get_cfg_defaults
 from utils import seed_everything, get_args, plot_loader_imgs, grad_flow
 from loader import ImageLoader
-from models import AuthImage
+from models import AuthImage, LinearClassifier
 from losses import SupConLoss
 
 def warmup_learning_rate(cfg, epoch, batch_id, total_batches, optimizer):
@@ -88,7 +88,7 @@ def train(loader, epoch, model, optimizer, criterion, cfg, device):
   avg_loss = sum(avg_loss)/len(avg_loss)
   return avg_loss
   
-def validate(loader, epoch, model, criterion, cfg, device):
+def validate(loader, epoch, model, classifier, criterion, cfg, device):
   model.eval()
   avg_loss = []
   with torch.no_grad():
@@ -132,9 +132,11 @@ if __name__ == "__main__":
   model, criterion = prepare_model(cfg)
   model = model.to(device)
   print("Total Trainable Parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+
   train_loader, val_loader = prepare_dataset(cfg, True)
 
-  optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
+  # optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY, momentum=0.9)
+  optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
   scheduler = CosineAnnealingLR(optimizer, cfg.LR.T_MAX, cfg.LR.MIN_LR)
 
   # TRAINING
@@ -142,7 +144,7 @@ if __name__ == "__main__":
   pbar = tqdm(range(cfg.TRAINING.ITER))
   for epoch in pbar:
     avg_train_loss = train(train_loader, epoch, model, optimizer, criterion, cfg, device)
-    # avg_val_loss = validate(val_loader, epoch, model, criterion, cfg, device)
+    # avg_val_loss = validate(val_loader, epoch, model, classifier, criterion, cfg, device)
     curr_lr = optimizer.param_groups[0]["lr"] 
     avg_grad = grad_flow(model.named_parameters()).item()
     

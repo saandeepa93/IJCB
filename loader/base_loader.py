@@ -21,7 +21,6 @@ class ImageIterator:
     self.non_affect_frames = int(cfg.DATASET.TED_SPLIT[1])
 
     
-    
   def __getallfiles__(self):
     all_sub_dict = {}
     classwise_dict = {0:0, 1:0}
@@ -59,10 +58,11 @@ class ImageIterator:
           cam_name = entry3.name
           
           # HANDLE TED FRAMES
-          openface_path = os.path.join(self.cfg.PATHS.OPENFACE_DIR, sub_name, sess_name, f"{cam_name}.csv")
-          df_of = pd.read_csv(openface_path)
+          openface_path = os.path.join(self.cfg.PATHS.OPENFACE_DIR, "csv", sub_name, sess_name, f"{cam_name}.csv")
+          df_of = pd.read_csv(openface_path,  encoding = "ISO-8859-1")
           valid_ind = df_of[df_of['success'] == 1]['frame'].tolist()
           valid_ind = [ind-1 for ind in valid_ind]
+          # ic(sub_name, sess_name, cam_name, len(valid_ind))
 
           ted_path = os.path.join(self.cfg.PATHS.TED_DIR, sub_name, sess_name, f"{cam_name}.csv")
           df = pd.read_csv(ted_path)
@@ -76,26 +76,37 @@ class ImageIterator:
 
           # TED FOR TRAIN; RANDOM FOR VAL
           if self.mode == "train":
-            frames = sorted(top_40 + bottom_10) if self.cfg.DATASET.TRAIN_HIGH \
-              else sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
+            if self.train == sub_name:
+              frames = sorted(valid_ind)
+            else:
+              frames = sorted(top_40 + bottom_10) if self.cfg.DATASET.TRAIN_HIGH \
+                else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))
           elif self.mode == "val":
-            frames =  sorted(top_40 + bottom_10) if self.cfg.DATASET.VAL_HIGH \
-              else sorted(list(random.sample(range(sorted_df.shape[0]), self.affect_frames + self.non_affect_frames)))
+            if self.train == sub_name:
+              frames = sorted(valid_ind)
+            else:
+              frames =  sorted(top_40 + bottom_10) if self.cfg.DATASET.VAL_HIGH \
+                else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))
             
           # FRAME LEVEL
           for frame in frames:
             frame_path = os.path.join(cam_dir, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
             # all_sub_dict[frame_path] = ctr
             
+
             # LABELLING FOR AUTHENTICATION VS IDENTIFICATION
             if self.cfg.DATASET.AUTH:
-              if self.train:
-                if sub_name == self.train:
-                  all_sub_dict[frame_path] = 1
-                  classwise_dict[1] +=1
-                else:
-                  all_sub_dict[frame_path] = 0
-                  classwise_dict[0] +=1
+              if self.mode == "train":
+                if classwise_dict[int(sub_name == self.train)] >= self.cfg.SPLIT.COUNT:
+                  continue
+              all_sub_dict[frame_path] = int(sub_name == self.train)
+              classwise_dict[int(sub_name == self.train)] +=1
+              # if sub_name == self.train:
+                #   all_sub_dict[frame_path] = 1
+                #   classwise_dict[1] +=1
+                # else:
+                #   all_sub_dict[frame_path] = 0
+                #   classwise_dict[0] +=1
             else:
               all_sub_dict[frame_path] = ctr
 

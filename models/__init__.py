@@ -1,1 +1,1 @@
-from models.classifiers import ClassifierVideo, ClassifyImage, AuthImage
+from models.classifiers import ClassifierVideo, ClassifyImage, AuthImage, LinearClassifier

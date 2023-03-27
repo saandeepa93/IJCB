@@ -51,7 +51,7 @@ class AuthImage(nn.Module):
     super().__init__()
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    self.encoder = InceptionResnetV1(pretrained='vggface2', in_chan=cfg.DATASET.N_CHAN, \
+    self.encoder = InceptionResnetV1(pretrained=None, in_chan=cfg.DATASET.N_CHAN, \
       dropout_prob=0.1, device=device)
     # self.encoder = SupConResNet(name="resnet18")
     self.head = nn.Sequential(
@@ -66,3 +66,10 @@ class AuthImage(nn.Module):
     x = F.normalize(x, dim=1)
     return x
 
+class LinearClassifier(nn.Module):
+    def __init__(self, cfg):
+        super(LinearClassifier, self).__init__()
+        self.fc = nn.Linear(cfg.MODEL.ENC_DIM, cfg.DATASET.N_CLASS)
+
+    def forward(self, features):
+        return self.fc(features)

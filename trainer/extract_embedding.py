@@ -25,25 +25,66 @@ from losses import SupConLoss
 from train_images_auth import prepare_model, prepare_dataset
 
 
+
+def save_flow_embedding(args, loader, model, mode, device):
+  n_bins = 2.0 ** cfg.FLOW.N_BITS
+  with torch.no_grad():
+    all_fname = []
+    all_label = []
+    z_0 = []
+    z_1 = []
+    z_2 = []
+    z_3 = []
+    with torch.no_grad():
+      for b, (x, label, fname) in enumerate(loader, 0):
+        x = x.to(device)
+        label = label.to(device)
+
+        if cfg.FLOW.N_BITS < 8:
+          x = torch.floor(x / 2 ** (8 - cfg.FLOW.N_BITS))
+        x = x / n_bins - 0.5
+
+        means, log_sds, logdet, features, log_p  = model(x + torch.rand_like(x) / n_bins)
+
+        z_0.append(features[0])
+        z_1.append(features[1])
+        z_2.append(features[2])
+        z_3.append(features[3])
+
+        all_fname += list(fname)
+        all_label.append(label)
+
+      all_label = torch.cat(all_label, dim=0)
+      z_0 = torch.cat(z_0, dim=0)
+      z_1 = torch.cat(z_1, dim=0)
+      z_2 = torch.cat(z_2, dim=0)
+      z_3 = torch.cat(z_3, dim=0)
+      
+      plot_umap(z_2.cpu(), all_label.cpu(), f"{args.config}_flow", all_fname, 2, mode)
+      plot_umap(z_2.cpu(), all_label.cpu(), f"{args.config}_flow", all_fname, 3, mode)
+      e()
+
+
 def save_embedding(args, loader, model, mode, device):
   with torch.no_grad():
     all_features = []
     all_fname = []
     all_label = []
-    for b, (x, label, fname) in enumerate(loader, 0):
-      x = x.to(device)
-      label = label.to(device)
-      features = model.module.encoder(x)
+    with torch.no_grad():
+      for b, (x, label, fname) in enumerate(loader, 0):
+        x = x.to(device)
+        label = label.to(device)
+        features = model.module.encoder(x)
 
-      all_features.append(features)
-      all_fname += list(fname)
-      all_label.append(label)
+        all_features.append(features)
+        all_fname += list(fname)
+        all_label.append(label)
 
-    all_features = torch.cat(all_features, dim=0)
-    all_label = torch.cat(all_label, dim=0)
-    
-    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 2, mode)
-    plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 3, mode)
+      all_features = torch.cat(all_features, dim=0)
+      all_label = torch.cat(all_label, dim=0)
+      
+      plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 2, mode)
+      plot_umap(all_features.cpu(), all_label.cpu(), f"{args.config}", all_fname, 3, mode)
 
 if __name__ == "__main__":
   # SET DEVICE
@@ -68,7 +109,7 @@ if __name__ == "__main__":
 
   # GET MODEL, DATASET ETC
   model, criterion = prepare_model(cfg)
-  checkpoint = torch.load(f"./checkpoint/{args.config}_model_final.pt", map_location=device)
+  checkpoint = torch.load(f"./checkpoint/{args.config}/model_final.pt", map_location=device)
   model.load_state_dict(checkpoint)
   model = model.to(device)
   model.eval()

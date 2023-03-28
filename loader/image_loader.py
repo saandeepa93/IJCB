@@ -21,11 +21,12 @@ from loader.base_loader import ImageIterator
 from utils import TwoCropTransform
 
 class ImageLoader(Dataset):
-  def __init__(self, cfg, mode, aug=False) -> None:
+  def __init__(self, cfg, mode, aug=False, single_aug = False) -> None:
     super().__init__()
     self.cfg = cfg
     self.mode = mode
     self.aug = aug
+    self.single_aug = single_aug
     self.ted_dir = cfg.PATHS.TED_DIR
     self.root_dir = os.path.join(cfg.PATHS.OPENFACE_DIR, "aligned")
     self.iterator = ImageIterator(cfg, self.root_dir, ".bmp", mode)
@@ -48,12 +49,13 @@ class ImageLoader(Dataset):
         A.Resize(self.cfg.DATASET.IMG_SIZE, self.cfg.DATASET.IMG_SIZE, p=1),
         A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], p=1),
         A.HorizontalFlip(p = 0.5),
-        A.ColorJitter(0.4, 0.4, 0.4, 0.1),
-        A.ToGray(p=0.2),
+        A.ColorJitter(0.9, 0.9, 0.9, 0.1, p=0.5),
+        A.Rotate(limit=30, p=0.5),
+        A.ToGray(p=0.5),
         ToTensorV2(),
       ])
 
-    val_transform = transforms = A.Compose([
+    val_transform = A.Compose([
       A.Resize(self.cfg.DATASET.IMG_SIZE, self.cfg.DATASET.IMG_SIZE, p=1),
       A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], p=1),
       ToTensorV2()
@@ -69,13 +71,12 @@ class ImageLoader(Dataset):
     x_img = np.array(Image.open(aligned_path))
     
     if self.aug and self.mode == "train":
-      x_img = self.train_transforms_single(image=x_img)['image']
+      if self.single_aug:
+        x_img = self.train_transforms_single(image=x_img)['image']
+      else:
+        x_img = self.train_transforms(x_img)
     if not self.aug and self.mode == "train":
       x_img = self.val_transforms(image=x_img)['image']
-        # if not self.cfg.DATASET.AUTH:
-        #   x_img = self.train_transforms_single(image=x_img)['image']
-        # else:
-        #   x_img = self.train_transforms(x_img)
     elif self.mode == "val":
       x_img = self.val_transforms(image=x_img)['image']
 

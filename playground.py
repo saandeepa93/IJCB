@@ -3,6 +3,7 @@ from icecream import ic
 import datetime
 import pandas as pd
 from sys import exit as e
+import pickle
 
 from utils import calculate_ted_score
 
@@ -24,43 +25,74 @@ def get_target_mat(df, target_AUs):
 
   return meta, gaze_loc, gaze_rot, pose_loc, pose_rot, landmarks, au_inten_OFPAU
 
-au_int = [1, 2, 4, 5, 6, 7, 9, 10, 12, 14, 15, 17, 20, 23, 25, 26, 45]
-au_int_cols = [f"AU{str(AU).zfill(2)}_r" for AU in au_int]
-of_df = pd.read_csv("./data/face_view_v3.csv", encoding = "ISO-8859-1")
-meta, gaze_loc, gaze_rot, pose_loc, pose_rot, landmarks, au_inten_OFPAU = get_target_mat(of_df, au_int_cols) 
-ted_score = calculate_ted_score(au_inten_OFPAU.values, gaze_loc.values, \
-                                    gaze_rot.values, pose_loc.values, pose_rot.values,\
-                                        landmarks.values, 10)
-                                  
-ted_score.columns = ['ted']
-ted_score['frame'] = range(0, ted_score.shape[0])
 
-ted_score.to_csv("./face_view_v3.csv")
-# plot_ted(ted_score, os.path.join(dest_sess_dir, f"{fname.split('.')[0]}.html"))
+def one_of():
+  au_int = [1, 2, 4, 5, 6, 7, 9, 10, 12, 14, 15, 17, 20, 23, 25, 26, 45]
+  au_int_cols = [f"AU{str(AU).zfill(2)}_r" for AU in au_int]
+  of_df = pd.read_csv("./data/face_view_v3.csv", encoding = "ISO-8859-1")
+  meta, gaze_loc, gaze_rot, pose_loc, pose_rot, landmarks, au_inten_OFPAU = get_target_mat(of_df, au_int_cols) 
+  ted_score = calculate_ted_score(au_inten_OFPAU.values, gaze_loc.values, \
+                                      gaze_rot.values, pose_loc.values, pose_rot.values,\
+                                          landmarks.values, 10)
+                                    
+  ted_score.columns = ['ted']
+  ted_score['frame'] = range(0, ted_score.shape[0])
 
-e()
+  ted_score.to_csv("./face_view_v3.csv")
+  # plot_ted(ted_score, os.path.join(dest_sess_dir, f"{fname.split('.')[0]}.html"))
 
-# HANDLE TED FRAMES
-openface_path = "./data/face_view_v3.csv"
-df_of = pd.read_csv(openface_path)
-ic(df_of.head())
-e()
-# valid_ind = df_of.index[df_of['success'] == 1].tolist()
-valid_ind = df_of[df_of['success'] == 1]['frame'].tolist()
-ic(df_of['success'])
-e()
-valid_ind = [ind-1 for ind in valid_ind]
-ic(len(valid_ind))
-e()
+  e()
 
-ted_path = "./data/face_view_v3_ted.csv"
-df = pd.read_csv(ted_path)
-# SELECT VALID OPENFACE RECORD
-# df = df[df.index.isin(valid_ind)]
-df = df[df['frame'].isin(valid_ind)]
-ind = df['frame'].tolist()
+  # HANDLE TED FRAMES
+  openface_path = "./data/face_view_v3.csv"
+  df_of = pd.read_csv(openface_path)
+  ic(df_of.head())
+  e()
+  # valid_ind = df_of.index[df_of['success'] == 1].tolist()
+  valid_ind = df_of[df_of['success'] == 1]['frame'].tolist()
+  ic(df_of['success'])
+  e()
+  valid_ind = [ind-1 for ind in valid_ind]
+  ic(len(valid_ind))
+  e()
 
-sorted_df = df.sort_values(['ted'], ascending=False)
-sorted_df = sorted_df.iloc[::2]
-top_40 = sorted_df.iloc[:self.affect_frames]['frame'].tolist()
-bottom_10 = sorted_df.iloc[-self.non_affect_frames:]['frame'].tolist()
+  ted_path = "./data/face_view_v3_ted.csv"
+  df = pd.read_csv(ted_path)
+  # SELECT VALID OPENFACE RECORD
+  # df = df[df.index.isin(valid_ind)]
+  df = df[df['frame'].isin(valid_ind)]
+  ind = df['frame'].tolist()
+
+  sorted_df = df.sort_values(['ted'], ascending=False)
+  sorted_df = sorted_df.iloc[::2]
+  top_40 = sorted_df.iloc[:self.affect_frames]['frame'].tolist()
+  bottom_10 = sorted_df.iloc[-self.non_affect_frames:]['frame'].tolist()
+
+
+if __name__ == "__main__":
+  with open("./data/linear_train", "rb") as fp:   # Unpickling
+    linear_train_ds = pickle.load(fp)
+  with open("./data/linear_val", "rb") as fp:   # Unpickling
+    linear_val_ds = pickle.load(fp)
+
+  with open("./data/scl_train", "rb") as fp:   # Unpickling
+    scl_train_ds = pickle.load(fp)
+  with open("./data/scl_val", "rb") as fp:   # Unpickling
+    scl_val_ds = pickle.load(fp)
+
+  
+  linear_train_ds = set(linear_train_ds)
+  linear_val_ds = set(linear_val_ds)
+  scl_train_ds = set(scl_train_ds)
+  scl_val_ds = set(scl_val_ds)
+
+  ic(linear_train_ds.intersection(linear_val_ds))
+  ic(scl_train_ds.intersection(scl_val_ds))
+
+  ic(len(linear_train_ds.intersection(scl_train_ds)), len(scl_train_ds))
+  ic(len(linear_val_ds.intersection(scl_val_ds)), len(scl_val_ds))
+  
+  ic(len(linear_train_ds.intersection(scl_val_ds)))
+  ic(len(linear_val_ds.intersection(scl_train_ds)))
+
+  e()

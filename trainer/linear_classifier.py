@@ -5,6 +5,7 @@ from tqdm import tqdm
 import time
 from icecream import ic
 from sys import exit as e
+import pickle
 import numpy as np
 
 import torch 
@@ -41,9 +42,10 @@ def prepare_model(cfg):
   criterion = nn.CrossEntropyLoss()
   return model, criterion
 
-def prepare_dataset(cfg, aug):
-  train_dataset = ImageLoader(cfg, "train", aug)
+def prepare_dataset(cfg, aug, single_aug=False):
+  train_dataset = ImageLoader(cfg, "train", aug, single_aug=single_aug)
   val_dataset = ImageLoader(cfg, "val", False)
+
 
   if cfg.TRAINING.SAMPLER:
     all_labels = list(train_dataset.all_files_dict.values())
@@ -139,18 +141,17 @@ if __name__ == "__main__":
    # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
   cfg.merge_from_file(config_path)
-  # cfg.TRAINING.BATCH = 64
-  cfg.DATASET.NUM_WORKERS = 4
+  cfg.TRAINING.BATCH = 32
+  cfg.DATASET.NUM_WORKERS = 1
   cfg.freeze()
   print(cfg)
 
   # GET MODEL, DATASET ETC
   model, criterion = prepare_model(cfg)
   model = model.to(device)
-  ckp = f"server_{args.config.split('_')[0]}_model_final.pt"
-  checkpoint = torch.load(f"./checkpoint/{ckp}", map_location=device)
-  model.load_state_dict(checkpoint)
   ckp_path = f"./checkpoint/server_{args.config.split('_')[0]}"
+  checkpoint = torch.load(os.path.join(ckp_path, f"model_final.pt"), map_location=device)
+  model.load_state_dict(checkpoint)
   for param in model.parameters():
     param.requires_grad = False
   mkdir(ckp_path)
@@ -160,7 +161,7 @@ if __name__ == "__main__":
 
   print("Total Trainable Parameters: ", sum(p.numel() for p in classifier.parameters() if p.requires_grad))
 
-  train_loader, val_loader = prepare_dataset(cfg, True)
+  train_loader, val_loader = prepare_dataset(cfg, True, True)
 
   # optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY, momentum=0.9)
   optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
@@ -173,24 +174,25 @@ if __name__ == "__main__":
     avg_train_loss, avg_train_acc = train(train_loader, epoch, model, classifier, optimizer, criterion, cfg, device)
     avg_val_loss, avg_val_acc = validate(val_loader, epoch, model, classifier, criterion, cfg, device)
     curr_lr = optimizer.param_groups[0]["lr"] 
-    # avg_grad = grad_flow(model.named_parameters()).item()
+    avg_grad = grad_flow(classifier.named_parameters()).item()
     
     if cfg.LR.ADJUST:
       scheduler.step()
     
     if avg_val_acc < min_loss:
       min_loss = avg_val_acc
-      torch.save(classifier.state_dict(), f"{ckp_path}/linear_{ckp}")
+      torch.save(model.state_dict(), f"{ckp_path}/linear_model_final.pt")
 
     pbar.set_description(
         f"train_loss: {round(avg_train_loss, 4)}; train_acc: {round(avg_train_acc, 4)};"
-        f"train_loss: {round(avg_val_loss, 4)}; val_acc: {round(avg_val_acc, 4)}; LR: {round(curr_lr, 4)}"
-                        ) 
+        f"val_loss: {round(avg_val_loss, 4)}; val_acc: {round(avg_val_acc, 4)}; LR: {round(curr_lr, 4)}"
+                        )
+    e()
     writer.add_scalar("Train/Loss", round(avg_train_loss, 4), epoch)
     writer.add_scalar("Val/Loss", round(avg_val_loss, 4), epoch)
     writer.add_scalar("Train/Acc", round(avg_train_acc, 4), epoch)
     writer.add_scalar("Val/Acc", round(avg_val_acc, 4), epoch)
-    # writer.add_scalar("Train/Min_Loss", round(min_loss, 5), epoch)
+    writer.add_scalar("misc/avg_grad", round(avg_grad, 5), epoch)
 
 
 

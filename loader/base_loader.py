@@ -62,28 +62,30 @@ class ImageIterator:
           df_of = pd.read_csv(openface_path,  encoding = "ISO-8859-1")
           valid_ind = df_of[df_of['success'] == 1]['frame'].tolist()
           valid_ind = [ind-1 for ind in valid_ind]
+          
           # ic(sub_name, sess_name, cam_name, len(valid_ind))
 
+          # SELECT VALID OPENFACE RECORD
           ted_path = os.path.join(self.cfg.PATHS.TED_DIR, sub_name, sess_name, f"{cam_name}.csv")
           df = pd.read_csv(ted_path)
-          # SELECT VALID OPENFACE RECORD
           df = df[df['frame'].isin(valid_ind)]
-
           sorted_df = df.sort_values(['ted'], ascending=False)
           sorted_df = sorted_df.iloc[::2]
+          valid_ted_ind = sorted_df['frame'].tolist()
           top_40 = sorted_df.iloc[:self.affect_frames]['frame'].tolist()
           bottom_10 = sorted_df.iloc[-self.non_affect_frames:]['frame'].tolist()
+          valid_ind = valid_ind[::2]
 
           # TED FOR TRAIN; RANDOM FOR VAL
           if self.mode == "train":
             if self.train == sub_name:
-              frames = sorted(valid_ind)
+              frames = valid_ind[:1000]
             else:
               frames = sorted(top_40 + bottom_10) if self.cfg.DATASET.TRAIN_HIGH \
                 else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))
           elif self.mode == "val":
             if self.train == sub_name:
-              frames = sorted(valid_ind)
+              frames = valid_ind[:1000]
             else:
               frames =  sorted(top_40 + bottom_10) if self.cfg.DATASET.VAL_HIGH \
                 else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))

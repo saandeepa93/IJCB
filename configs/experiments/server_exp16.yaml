@@ -1,0 +1,65 @@
+PATHS:
+  VID_DIR: /data/dataset/ca_data/affect_split_videos_2
+  OPENFACE_DIR: /data/dataset/ca_data/openface/
+  TED_DIR: /data/dataset/ca_data/openface/ted
+  VIS_PATH: ./data/vis/loader_img
+
+JSON:
+  TOUCH_TS: ./data/touch_ts_with_affect3.json
+
+TED:
+  WINDOW: 10
+  
+DATASET:
+  N_CLASS: 2
+  N_CHAN: 3
+  IMG_SIZE: 224
+  NUM_WORKERS: 6
+  CAMERA_VIEW: "face"
+  NUM_FRAMES: 20
+  TED_SPLIT: [30, 20]
+  AUTH: True
+  TRAIN_HIGH: False
+  VAL_HIGH: False
+  SINGLE_AUG: True
+
+SPLIT:
+  VAL_SPLIT: sess
+  SPLIT_VALUE: S3
+  SUBJECT: P0002
+  COUNT: 10000
+
+TRAINING:
+  BATCH: 256
+  LR: 5e-3
+  WT_DECAY: 1e-2
+  ITER: 2000
+  SAMPLER: False
+  
+LR:
+  WARM: False
+  WARM_ITER: 20
+  WARMUP_FROM: 1e-4
+  ADJUST: False
+  DECAY_RATE: 0.1
+  MIN_LR: 0.01
+  T_MAX: 100
+
+MODEL:
+  FEAT: 128
+  ENC_DIM: 512
+  TEMP: 0.2
+
+TRANSFORMER:
+  DIM_IN: 16
+  DIM_OUT: 256
+  DEPTH: 6
+  HEADS: 8
+  DIM_HEAD: 64
+  MLP_DIM: 64
+  DROPOUT: 0.2
+  POOL: cls
+  PATCH_SIZE: 8
+
+COMMENTS: FaceNet pretrained, 
+

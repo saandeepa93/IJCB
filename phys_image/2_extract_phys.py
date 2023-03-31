@@ -2,7 +2,8 @@ import os
 from sys import exit as e
 from icecream import ic
 from tqdm import tqdm
-
+import sys
+sys.path.append('.')
 import pandas as pd
 import numpy as np
 import math
@@ -58,6 +59,7 @@ if __name__ == "__main__":
 
   pbar = tqdm(valid_subjects)
   for sub in pbar:
+    sub = "P0039"
     sub_dir = os.path.join(phys_root, sub)
     if not os.path.isdir(sub_dir):
       continue

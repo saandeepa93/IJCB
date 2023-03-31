@@ -6,6 +6,9 @@ import copy
 import json
 import yaml
 
+import sys
+sys.path.append('.')
+
 import unicodedata
 from tqdm import tqdm
 
@@ -28,7 +31,7 @@ if __name__ == "__main__":
 
   # CHILDREN
   children = ['P0030', 'P0031', 'P0039']  
-  error = {'P0029': ['S1', 'S2', 'S3'], 'P0016': ['S3']}
+  error = vars['error']
   update = vars['update']
 
   # TOUCH VARIABLES
@@ -76,7 +79,7 @@ if __name__ == "__main__":
   with open(affect_ts_path, 'r') as fp:
     affect_ts_all = json.load(fp)
       
-
+  tot_cnt = 0
   pbar = tqdm(os.listdir(touch_dir))
   for sub in pbar:
     touch_sub_dir = os.path.join(touch_dir, sub)
@@ -138,8 +141,6 @@ if __name__ == "__main__":
         subject_task_timestamps[sub][sess]["desktop"]["free_form"]["start"] = ts_start2
         subject_task_timestamps[sub][sess]["desktop"]["free_form"]["end"] = ts_end2
         subject_task_timestamps[sub][sess]["session_start"] = ts_start2
-      
-
       # TASK 2: DESKTOP ESSAY
       desktop_essay_file = os.path.join(desktop_ca_dir, "task_essay.docx")
       if not os.path.isfile(desktop_essay_file):
@@ -181,7 +182,7 @@ if __name__ == "__main__":
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["start"] = "NA"
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["end"] = "NA"
       else:
-        ts_start5, ts_end5 = p.process_ff_file_phone(phone_ff_file, phone_key_file, ts_start2, mod_flg)
+        ts_start5, ts_end5 = p.process_ff_file_phone(phone_ff_file, phone_key_file, ts_start2, mod_flg, child_flag)
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["start"] = ts_start5
         subject_task_timestamps[sub][sess]["phone"]["free_form"]["end"] = ts_end5
       
@@ -214,7 +215,7 @@ if __name__ == "__main__":
       a2_start = convert_to_datetime(affect_ts['vid2'][0])
       t1 = (a2_start-a1_end).total_seconds()
       if t1 < 0:
-        ic(affect_ts, sub, sess, "VID1")
+        ic(sub, sess, "VID1")
       v2_start_time = v1_end_time + datetime.timedelta(0, t1)
       v2_end_time = v2_start_time + datetime.timedelta(0, duration[1])
       subject_task_timestamps[sub][sess]["affect"]["vid2"]["start"] = str(v2_start_time)
@@ -225,7 +226,7 @@ if __name__ == "__main__":
       a3_start = convert_to_datetime(affect_ts['vid3'][0])
       t2 = (a3_start-a2_end).total_seconds()
       if t2 < 0:
-        ic(affect_ts, sub, sess, "VID2")
+        ic(sub, sess, "VID2")
       v3_start_time = v2_end_time + datetime.timedelta(0, t2)
       v3_end_time = v3_start_time + datetime.timedelta(0, duration[2])
       subject_task_timestamps[sub][sess]["affect"]["vid3"]["start"] = str(v3_start_time)
@@ -236,7 +237,7 @@ if __name__ == "__main__":
       a4_start = convert_to_datetime(affect_ts['vid4'][0])
       t3 = (a4_start-a3_end).total_seconds()
       if t3 < 0:
-        ic(affect_ts, sub, sess, "VID3")
+        ic(sub, sess, "VID3")
       v4_start_time = v3_end_time + datetime.timedelta(0, t3)
       v4_end_time = v4_start_time + datetime.timedelta(0, duration[3])
       subject_task_timestamps[sub][sess]["affect"]["vid4"]["start"] = str(v4_start_time)
@@ -245,7 +246,7 @@ if __name__ == "__main__":
 
 
 
-  with open('./data/touch_ts_with_affect4.json', 'w') as fp:
+  with open('./data/touch_ts_with_affect5.json', 'w') as fp:
     json.dump(subject_task_timestamps, fp,  indent=4)
   # ic(subject_task_timestamps)
 

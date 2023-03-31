@@ -5,10 +5,17 @@ from tqdm import tqdm
 import shutil
 from icecream import ic
 from sys import exit as e
-
+import sys
+sys.path.append('.')
+from utils import read_yaml
 
 if __name__ == "__main__":
-  root_dir = "/mnt/ca_data/Project Resources - USF/Participant Data/"
+  vars = read_yaml()
+  root_mnt_dir = vars['paths']['root_mount']
+  backup_dir = vars['paths']['cur_backup']
+  data_dir = vars['paths']['data']
+  root_dir = os.path.join(root_mnt_dir, backup_dir, data_dir)
+  
   dest_phys_dir = "/data/dataset/ca_data/physiology"
   dest_tag_dir = "/data/dataset/ca_data/timestamp"
 

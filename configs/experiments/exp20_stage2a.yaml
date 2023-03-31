@@ -20,14 +20,15 @@ DATASET:
   TED_SPLIT: [30, 20]
   AUTH: True
   TRAIN_HIGH: False
-  VAL_HIGH: False
+  VAL_HIGH: True
   SINGLE_AUG: True
 
 SPLIT:
   VAL_SPLIT: sess
   SPLIT_VALUE: S3
   SUBJECT: P0002
-  COUNT: [10000, 10000]
+  COUNT: [350, 600]
+  IMPOSTER: P0004
 
 TRAINING:
   BATCH: 256
@@ -61,5 +62,5 @@ TRANSFORMER:
   POOL: cls
   PATCH_SIZE: 8
 
-COMMENTS: FaceNet pretrained, 
+COMMENTS: FaceNet pretrained, High Validation Affect
 

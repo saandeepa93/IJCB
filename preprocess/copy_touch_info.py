@@ -8,13 +8,22 @@ import difflib
 from icecream import ic
 from sys import exit as e
 
+import sys
+sys.path.append('.')
+from utils import read_yaml
 
 def make_directories(path):
   if not os.path.isdir(path):
     os.mkdir(path)
 
 if __name__ == "__main__":
-  root_dir = "/mnt/ca_data/"
+  # READ VARIABLES
+  vars = read_yaml()
+  root_mnt_dir = vars['paths']['root_mount']
+  backup_dir = vars['paths']['cur_backup']
+  data_dir = vars['paths']['data']
+  root_dir = os.path.join(root_mnt_dir, backup_dir, data_dir)
+
   dest_annot_dir = "/data/dataset/ca_data/touch_data"
   months_dict = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, \
     "July": 7, "August": 8, "September": 9, "October": 10, "Nov": 11, "December": 12}
@@ -36,6 +45,7 @@ if __name__ == "__main__":
   #   "P0029": {"Nov_14_2022": "user_data_2022.11.14.09.55.32.6540.txt"},
   # }
 
+  sub_ctr = 0
   pbar = tqdm(os.listdir(root_dir))
   for sub in pbar:
     sub_dir = os.path.join(root_dir, sub)
@@ -57,7 +67,8 @@ if __name__ == "__main__":
       day = dt[1]
       year = dt[2]
       
-      orig_month = difflib.get_close_matches(month, months_dict.keys())[0]
+      
+      orig_month = difflib.get_close_matches(month, months_dict.keys(), cutoff=0.4)[0]
       session_date_lst.append(f"{year}-{months_dict[orig_month]}-{day}")
       session_date_dict[session_date_lst[-1]] = sess
     
@@ -69,7 +80,7 @@ if __name__ == "__main__":
     
     for session in os.listdir(sub_dir):
       session_dir = os.path.join(sub_dir, session)
-      if "_2022" not in sess and "_2023" not in sess:
+      if "_2022" not in session and "_2023" not in session:
         continue 
       if not os.path.isdir(session_dir):
         continue
@@ -135,8 +146,6 @@ if __name__ == "__main__":
         print(f"{phone_pwd_file} is not present")
 
 
-      # ic(phone_pwd_file, dest_phone_ca_dir)
-      # e()
 
 
 

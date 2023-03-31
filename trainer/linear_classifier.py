@@ -10,6 +10,7 @@ import numpy as np
 
 import torch 
 from torch import nn, optim
+from torch.nn import functional as F
 from torchvision import io
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -35,6 +36,9 @@ def warmup_learning_rate(cfg, epoch, batch_id, total_batches, optimizer):
     
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
+pairwise_dist = lambda features: (features.unsqueeze(1) - features).pow(2).sum(-1)
+
 
 def prepare_model(cfg):
   model = AuthImage(cfg)
@@ -66,16 +70,24 @@ def train(loader, epoch, model, classifier, optimizer, criterion, cfg, device):
   y_train_true = []
   y_train_pred = []
 
-  for b, (x, label, _) in enumerate(loader, 0):
+  for b, (x, label, fname) in enumerate(loader, 0):
     # x = torch.cat([x[0], x[1]], dim=0)
     x = x.to(device)
     label = label.type(torch.LongTensor)
     label = label.to(device)
     
+    # x = x[label==1]
     bsz = label.size(0)
 
     with torch.no_grad():
       features = model.module.encoder(x)
+
+    # dist = pairwise_dist(features)
+
+    # # dist = F.pairwise_distance(features, features)
+    # ic(label)
+    # ic(dist)
+    # e()
 
     out = classifier(features.detach())
     loss = criterion(out, label)
@@ -108,6 +120,7 @@ def validate(loader, epoch, model, classifier, criterion, cfg, device):
       x = x.to(device)
       label = label.type(torch.LongTensor)
       label = label.to(device)
+   
 
       features = model.module.encoder(x)
       out = classifier(features.detach())
@@ -141,7 +154,7 @@ if __name__ == "__main__":
    # LOAD CONFIGURATION
   cfg = get_cfg_defaults()
   cfg.merge_from_file(config_path)
-  cfg.TRAINING.BATCH = 32
+  cfg.TRAINING.BATCH = 16
   cfg.DATASET.NUM_WORKERS = 1
   cfg.freeze()
   print(cfg)
@@ -164,7 +177,7 @@ if __name__ == "__main__":
   train_loader, val_loader = prepare_dataset(cfg, True, True)
 
   # optimizer = optim.SGD(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY, momentum=0.9)
-  optimizer = optim.AdamW(model.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
+  optimizer = optim.AdamW(classifier.parameters(), lr=cfg.TRAINING.LR, weight_decay=cfg.TRAINING.WT_DECAY)
   scheduler = CosineAnnealingLR(optimizer, cfg.LR.T_MAX, cfg.LR.MIN_LR)
 
   # TRAINING

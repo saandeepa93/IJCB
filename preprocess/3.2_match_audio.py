@@ -113,9 +113,9 @@ if __name__ == "__main__":
           timestamps = [start.strftime("%H:%M:%S"), end.strftime("%H:%M:%S")]
           ic(timestamps)
           timestamp_dict[sub][f"S{sess_num}"][aud_name][f"vid{i+1}"] = timestamps
-        e()
-  # with open(f'./sample_data/affect_ts.json', 'w') as fp:
-  #   json.dump(timestamp_dict, fp, indent=4)
+          
+  with open(f'./sample_data/affect_ts2.json', 'w') as fp:
+    json.dump(timestamp_dict, fp, indent=4)
 
       
 

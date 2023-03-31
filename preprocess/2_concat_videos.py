@@ -44,9 +44,10 @@ if __name__ == "__main__":
   vid_dir = vars['paths']['compressed']
   dest_dir = vars['paths']['merged_compressed']
 
-  with open("./data/synced2.json", 'r') as fp:
-    current_status = json.load(fp)
-
+  # READ ALL SUBJECTS AND SESSIONS LIST
+  cur_dir = vars['paths']['latest']
+  all_dirs = glob.glob(os.path.join(cur_dir, "*", "*"))
+  valid_dirs = ["/".join(pths.split('/')[-2:]) for pths in all_dirs]
 
   pbar = tqdm(sorted(os.listdir(vid_dir)))
   for sub in pbar:

@@ -24,6 +24,7 @@ class ImageIterator:
   def __getallfiles__(self):
     all_sub_dict = {}
     classwise_dict = {0:0, 1:0}
+    subwise_dict = {}
     ctr = 0
     # SUBJECTS
     for entry in os.scandir(self.root_dir):
@@ -31,6 +32,7 @@ class ImageIterator:
         continue
       sub_dir = entry.path
       sub_name = entry.name
+      subwise_dict[sub_name] = 0
 
       # SESSION
       for entry2 in os.scandir(sub_dir):
@@ -46,6 +48,9 @@ class ImageIterator:
               if self.split_value not in sess_name:
                 continue
             else:
+              # LEAVE OUT IMPOSTER IN TRAINING
+              if sub_name == self.cfg.SPLIT.IMPOSTER:
+                continue
               if self.split_value in sess_name:
                 continue
         # CAMERA
@@ -85,7 +90,7 @@ class ImageIterator:
                 else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))
           elif self.mode == "val":
             if self.train == sub_name:
-              frames = valid_ind[:1000]
+              frames = valid_ted_ind[:1000]
             else:
               frames =  sorted(top_40 + bottom_10) if self.cfg.DATASET.VAL_HIGH \
                 else sorted(list(random.sample(valid_ind, self.affect_frames + self.non_affect_frames)))
@@ -93,27 +98,20 @@ class ImageIterator:
           # FRAME LEVEL
           for frame in frames:
             frame_path = os.path.join(cam_dir, f"frame_det_00_{str(frame+1).zfill(6)}.bmp")
-            # all_sub_dict[frame_path] = ctr
-            
-
             # LABELLING FOR AUTHENTICATION VS IDENTIFICATION
             if self.cfg.DATASET.AUTH:
               if self.mode == "train":
-                if classwise_dict[int(sub_name == self.train)] >= self.cfg.SPLIT.COUNT:
+                # if classwise_dict[int(sub_name == self.train)] >= self.cfg.SPLIT.COUNT[int(sub_name == self.train)]:
+                if subwise_dict[sub_name] >= self.cfg.SPLIT.COUNT[int(sub_name == self.train)]:
                   continue
               all_sub_dict[frame_path] = int(sub_name == self.train)
               classwise_dict[int(sub_name == self.train)] +=1
-              # if sub_name == self.train:
-                #   all_sub_dict[frame_path] = 1
-                #   classwise_dict[1] +=1
-                # else:
-                #   all_sub_dict[frame_path] = 0
-                #   classwise_dict[0] +=1
+              subwise_dict[sub_name] += 1
             else:
               all_sub_dict[frame_path] = ctr
 
       ctr+=1
-    return all_sub_dict, classwise_dict
+    return all_sub_dict, classwise_dict, subwise_dict
 
 class VideoIterator:
   # def __init__(self, root, ext, camera_view, train=False, mode="train"):

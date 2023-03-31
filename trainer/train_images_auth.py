@@ -152,7 +152,7 @@ if __name__ == "__main__":
   pbar = tqdm(range(cfg.TRAINING.ITER))
   for epoch in pbar:
     avg_train_loss = train(train_loader, epoch, model, optimizer, criterion, cfg, device)
-    # avg_val_loss = validate(val_loader, epoch, model, criterion, cfg, device)
+    avg_val_loss = validate(val_loader, epoch, model, criterion, cfg, device)
     curr_lr = optimizer.param_groups[0]["lr"] 
     avg_grad = grad_flow(model.named_parameters()).item()
     
@@ -168,7 +168,7 @@ if __name__ == "__main__":
         # f"val_loss: {round(avg_val_loss, 4)}"
                         ) 
     writer.add_scalar("Train/Loss", round(avg_train_loss, 4), epoch)
-    # writer.add_scalar("Val/Loss", round(avg_val_loss, 4), epoch)
+    writer.add_scalar("Val/Loss", round(avg_val_loss, 4), epoch)
     writer.add_scalar("misc/avg_grad", round(avg_grad, 5), epoch)
     writer.add_scalar("misc/lr", round(curr_lr, 6), epoch)
 
